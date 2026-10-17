@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Hop’s Math Pond</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg1:#c9f0f7;--bg2:#8fd3e3;--card:#fffdf4;--ink:#17375e;--btn:#ffffff;--accent:#ff7a59;--sun:#ffc93c;--leaf:#3fb55f;--bad:#ef6a6a;--shade:rgba(23,55,94,.22);
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg1:#12304f;--bg2:#0d2340;--card:#1d4068;--ink:#f3f8ff;--btn:#26507f;--shade:rgba(0,0,0,.45)}}
+:root[data-theme="dark"]{--bg1:#12304f;--bg2:#0d2340;--card:#1d4068;--ink:#f3f8ff;--btn:#26507f;--shade:rgba(0,0,0,.45)}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%}
+body{font-family:'Fredoka','Trebuchet MS','Comic Sans MS',sans-serif;color:var(--ink);background:linear-gradient(var(--bg1),var(--bg2)) fixed;background-color:var(--bg2);-webkit-tap-highlight-color:transparent}
+main{max-width:600px;margin:0 auto;padding:16px;display:flex;flex-direction:column;gap:14px;min-height:100vh}
+.card{background:var(--card);border-radius:28px;padding:20px;box-shadow:0 6px 0 var(--shade)}
+h1{font-size:2.3rem;margin:0;line-height:1.05;font-weight:700}
+h2{margin:0;font-size:1.5rem}
+p{margin:0}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.pill{background:var(--sun);color:#17375e;border-radius:999px;padding:6px 14px;font-weight:700;font-size:1.1rem}
+.icon{background:var(--btn);color:var(--ink);border:0;border-radius:50%;width:48px;height:48px;font-size:1.4rem;box-shadow:0 4px 0 var(--shade);cursor:pointer}
+button{font-family:inherit;cursor:pointer}
+button:focus-visible{outline:4px solid var(--accent);outline-offset:3px}
+.hero{text-align:center}
+.frog{font-size:5.5rem;display:inline-block;line-height:1}
+.hop{animation:hop .7s ease-out}
+@keyframes hop{0%{transform:translateY(0)}35%{transform:translateY(-34px) rotate(-8deg)}70%{transform:translateY(0) rotate(6deg)}100%{transform:none}}
+.menu{display:grid;gap:12px}
+.mode{display:flex;align-items:center;gap:14px;text-align:left;font-size:1.35rem;font-weight:700;color:#17375e;border:0;border-radius:24px;padding:14px 18px;box-shadow:0 6px 0 var(--shade);transition:transform .08s}
+.mode:active{transform:translateY(4px);box-shadow:0 2px 0 var(--shade)}
+.mode small{display:block;font-weight:400;font-size:.95rem;opacity:.8}
+.mode .e{font-size:2.4rem}
+.pads{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.pad{width:24px;height:16px;border-radius:50%;background:var(--shade)}
+.pad.done{background:var(--leaf)}
+.pad.now{background:var(--sun);transform:scale(1.25)}
+.q{text-align:center;display:flex;flex-direction:column;gap:12px;align-items:center}
+.prompt{font-size:1.6rem;font-weight:700}
+.stuff{font-size:2.1rem;line-height:1.25;letter-spacing:2px;word-break:break-word}
+.stuff .gone{opacity:.25;filter:grayscale(1)}
+.eq{font-size:3.2rem;font-weight:700;display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap}
+.grp{display:flex;align-items:center;gap:10px;justify-content:center;flex-wrap:wrap}
+.blank{display:inline-block;min-width:1.6em;border-bottom:6px dashed var(--accent);color:var(--accent)}
+.answers{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.ans{font-size:2.6rem;font-weight:700;color:var(--ink);background:var(--btn);border:4px solid transparent;border-radius:24px;padding:16px 0;box-shadow:0 6px 0 var(--shade)}
+.ans:active{transform:translateY(4px);box-shadow:0 2px 0 var(--shade)}
+.ans.ok{background:var(--leaf);color:#fff}
+.ans.no{background:var(--bad);color:#fff;animation:shake .4s}
+.ans:disabled{cursor:default}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.say{min-height:2.2em;text-align:center;font-size:1.25rem;font-weight:600}
+.big{font-size:1.4rem;font-weight:700;border:0;border-radius:999px;padding:14px 28px;background:var(--accent);color:#fff;box-shadow:0 6px 0 var(--shade)}
+.big.alt{background:var(--btn);color:var(--ink)}
+.row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.stars{font-size:3.6rem;letter-spacing:6px}
+.fall{position:fixed;top:-40px;font-size:2rem;pointer-events:none;animation:fall 1.8s ease-in forwards;z-index:9}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.hop,.ans.no,.fall{animation:none}.fall{display:none}}
+@media (max-width:420px){.ans{font-size:2.1rem}.eq{font-size:2.6rem}}
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+(function(){
+var app=document.getElementById('app');
+var MODES=[
+ {id:'count',e:'🔢',name:'Count it',desc:'How many do you see?',c:'#ffd96b'},
+ {id:'add',e:'➕',name:'Put together',desc:'Add numbers up',c:'#9fe3a6'},
+ {id:'sub',e:'➖',name:'Take away',desc:'How many are left?',c:'#ffb3a1'},
+ {id:'cmp',e:'⚖️',name:'Bigger or smaller',desc:'Pick the right number',c:'#c4b5f5'},
+ {id:'next',e:'🪜',name:'What comes next?',desc:'Fill in the missing number',c:'#9fd8f5'},
+ {id:'tens',e:'🔟',name:'Tens and ones',desc:'Build numbers up to 99',c:'#ffd0e8'},
+ {id:'miss',e:'❓',name:'Missing number',desc:'3 + ? = 8',c:'#ffe0a3'},
+ {id:'word',e:'📖',name:'Story problems',desc:'Listen and solve',c:'#b8f0d8'},
+ {id:'time',e:'🕒',name:'Tell time',desc:'Hours and half hours',c:'#f5c6c6'}
+];
+var ITEMS=['🍎','⭐','🐞','🐟','🍪','🎈','🦋','🍓'];
+var total=0, muted=false, ctx=null, LV=1, lvls={};
+try{lvls=JSON.parse(localStorage.getItem('hop-lv')||'{}')||{};}catch(e){lvls={};}
+try{total=parseInt(localStorage.getItem('hop-stars')||'0',10)||0;}catch(e){}
+function save(){try{localStorage.setItem('hop-stars',String(total));}catch(e){}}
+function rnd(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function pick(a){return a[rnd(0,a.length-1)];}
+function beep(freqs,type){
+ if(muted)return;
+ try{
+  ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();
+  freqs.forEach(function(f,i){
+   var o=ctx.createOscillator(),g=ctx.createGain(),t=ctx.currentTime+i*0.12;
+   o.type=type||'sine';o.frequency.value=f;
+   g.gain.setValueAtTime(0.18,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.2);
+   o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+0.22);
+  });
+ }catch(e){}
+}
+var voiceKind='teacher';
+try{voiceKind=localStorage.getItem('hop-voice')||'teacher';}catch(e){}
+function findVoice(){
+ try{
+  var vs=window.speechSynthesis.getVoices().filter(function(v){return /^en/i.test(v.lang);});
+  var f=vs.filter(function(v){return /samantha|zira|jenny|aria|susan|karen|moira|tessa|victoria|fiona|serena|female|google us english|google uk english female/i.test(v.name);});
+  return f[0]||vs[0]||null;
+ }catch(e){return null;}
+}
+try{window.speechSynthesis.getVoices();}catch(e){}
+function speak(t){
+ if(muted)return;
+ try{
+  window.speechSynthesis.cancel();
+  var u=new SpeechSynthesisUtterance(t),v=findVoice();
+  if(v)u.voice=v;
+  if(voiceKind==='child'){u.rate=1.0;u.pitch=1.9;}
+  else{u.rate=0.85;u.pitch=1.0;}
+  window.speechSynthesis.speak(u);
+ }catch(e){}
+}
+function confetti(){
+ var s=['🎉','⭐','✨','🌟','🐸'];
+ for(var i=0;i<14;i++){
+  var d=document.createElement('div');d.className='fall';d.textContent=pick(s);
+  d.style.left=rnd(2,92)+'vw';d.style.animationDelay=(Math.random()*.5)+'s';
+  document.body.appendChild(d);
+  setTimeout(function(n){n.remove();}.bind(null,d),2600);
+ }
+}
+function items(n,goneCount){
+ var e=pick(ITEMS),h='';
+ for(var i=0;i<n;i++)h+='<span'+(goneCount&&i>=n-goneCount?' class="gone"':'')+'>'+e+'</span>';
+ return h;
+}
+function opts(ans,max){
+ var s={};s[ans]=1;
+ var guard=0;
+ while(Object.keys(s).length<3&&guard++<60){
+  var v=ans+rnd(-3,3);
+  if(v>=0&&v<=max&&v!==ans)s[v]=1;
+ }
+ return Object.keys(s).map(Number).sort(function(){return Math.random()-.5;});
+}
+function near(ans,list,max){var s={};s[ans]=1;list.forEach(function(v){if(v>=0&&v<=max&&Object.keys(s).length<3)s[v]=1;});var g=0;while(Object.keys(s).length<3&&g++<60){var v=ans+rnd(-3,3);if(v>=0&&v<=max)s[v]=1;}return Object.keys(s).map(Number).sort(function(){return Math.random()-.5;});}
+function clock(h,m){
+ var s=`<svg viewBox='-60 -60 120 120' width='190' height='190' role='img' aria-label='Clock'><circle r='56' fill='#fff' stroke='#17375e' stroke-width='4'/>`;
+ for(var k=1;k<=12;k++){var a=k*Math.PI/6;s+=`<text x='${(Math.sin(a)*43).toFixed(1)}' y='${(-Math.cos(a)*43+5).toFixed(1)}' text-anchor='middle' font-size='13' font-weight='700' fill='#17375e' font-family='Fredoka,sans-serif'>${k}</text>`;}
+ s+=`<line x1='0' y1='0' x2='0' y2='-26' stroke='#ff7a59' stroke-width='6' stroke-linecap='round' transform='rotate(${(h%12+m/60)*30})'/><line x1='0' y1='0' x2='0' y2='-38' stroke='#17375e' stroke-width='4' stroke-linecap='round' transform='rotate(${m*6})'/><circle r='4' fill='#17375e'/></svg>`;
+ return s;
+}
+function makeNew(mode){
+ var q={},L=LV;
+ if(mode==='tens'){
+  if(L>=3&&Math.random()<.5){
+   var base=rnd(2,8)*10+rnd(0,9),up=Math.random()<.5,r=up?base+10:base-10;
+   q.prompt='What is 10 '+(up?'more':'less')+' than '+base+'?';q.say='Look at the tens digit.';
+   q.vis=`<div class='eq'><span>${base}</span></div>`;q.ans=r;q.opts=near(r,[up?r-20:r+20,r+1,r-1],99);
+   q.speak=q.prompt;return q;
+  }
+  var mx=L<=2?30:L<=4?60:99,n=rnd(11,mx),t=Math.floor(n/10),o=n%10;
+  q.prompt='How many in all?';q.say='Each 🟦 is a ten. Each 🔸 is a one.';
+  q.vis=`<div class='eq' style='font-size:2.2rem'><span>${t} tens</span><span>+</span><span>${o} ones</span></div><div class='stuff'>${'🟦'.repeat(t)} ${'🔸'.repeat(o)}</div>`;
+  q.ans=n;q.opts=near(n,[o*10+t,n+10,n-10],99);q.speak=t+' tens and '+o+' ones. What number is that?';return q;
+ }
+ if(mode==='miss'){
+  var c=rnd(4,L<=2?10:20),a=rnd(1,c-1),b=c-a,ty=L>=4&&Math.random()<.5?2:(L>=3&&Math.random()<.5?1:0),e;
+  if(ty===0){e=`<span>${a}</span><span>+</span><span class='blank'>?</span><span>=</span><span>${c}</span>`;q.ans=b;}
+  else if(ty===1){e=`<span class='blank'>?</span><span>+</span><span>${b}</span><span>=</span><span>${c}</span>`;q.ans=a;}
+  else{e=`<span>${c}</span><span>−</span><span class='blank'>?</span><span>=</span><span>${a}</span>`;q.ans=b;}
+  q.prompt='Find the missing number!';q.say='What makes the number sentence true?';
+  q.vis=`<div class='eq'>${e}</div>`;q.opts=near(q.ans,[],20);q.speak='Find the missing number.';return q;
+ }
+ if(mode==='word'){
+  var P=pick([['Mia','She'],['Leo','He'],['Ava','She'],['Sam','He']]),th=pick(['apples','stickers','toy cars','books','shells']),
+  mx2=L<=2?10:20,add=Math.random()<.5,x,y;
+  if(add){x=rnd(2,mx2-2);y=rnd(1,mx2-x);q.ans=x+y;q.prompt=`${P[0]} has ${x} ${th}. ${P[1]} gets ${y} more. How many ${th} now?`;}
+  else{x=rnd(3,mx2);y=rnd(1,x-1);q.ans=x-y;q.prompt=`${P[0]} has ${x} ${th}. ${P[1]} gives away ${y}. How many ${th} are left?`;}
+  q.say='Draw it or count it!';q.vis='';q.opts=near(q.ans,[],22);q.speak=q.prompt;return q;
+ }
+ if(mode==='time'){
+  var tm=function(h,m){return h+':'+(m?'30':'00');},h=rnd(1,12),mi=(L>=3&&Math.random()<.5)?30:0,an=tm(h,mi),s={};
+  s[an]=1;[tm(h%12+1,mi),tm((h+10)%12+1,mi),tm(h,mi?0:30)].forEach(function(v){if(Object.keys(s).length<3)s[v]=1;});
+  q.ans=an;q.opts=Object.keys(s).sort(function(){return Math.random()-.5;});q.sm=true;
+  q.prompt='What time is it?';q.say='The short hand shows the hour.';q.vis=clock(h,mi);q.speak='What time is it?';return q;
+ }
+ return null;
+}
+function make(mode,i){
+ var nq=makeNew(mode);if(nq)return nq;
+ var hard=LV>=3, q={};
+ if(mode==='count'){
+  var n=rnd(2,LV>=5?30:hard?20:10);
+  q.prompt='How many do you see?';q.say='Count them one by one!';
+  q.vis='<div class="stuff">'+items(n)+'</div>';q.ans=n;q.opts=opts(n,35);
+  q.speak='How many do you see?';
+ }else if(mode==='add'){
+  var a=rnd(1,LV>=4?12:hard?10:5),b=rnd(1,LV>=4?9:hard?10:5);if(a+b>20)b=20-a;
+  if(!hard&&a+b>10)b=10-a||1;
+  q.prompt='Put them together!';q.say='Count all of them.';
+  q.vis=(a+b<=10?'<div class="grp"><div class="stuff">'+items(a)+'</div><b style="font-size:2rem">+</b><div class="stuff">'+items(b)+'</div></div>':'')+
+   '<div class="eq"><span>'+a+'</span><span>+</span><span>'+b+'</span><span>=</span><span class="blank">?</span></div>';
+  q.ans=a+b;q.opts=opts(a+b,22);q.speak=a+' plus '+b+'. What is the answer?';
+ }else if(mode==='sub'){
+  var x=rnd(3,hard?20:10),y=rnd(1,Math.min(x-1,hard?10:6));
+  q.prompt='Take some away!';q.say='The faded ones are taken away.';
+  q.vis=(x<=10?'<div class="stuff">'+items(x,y)+'</div>':'')+
+   '<div class="eq"><span>'+x+'</span><span>−</span><span>'+y+'</span><span>=</span><span class="blank">?</span></div>';
+  q.ans=x-y;q.opts=opts(x-y,22);q.speak=x+' take away '+y+'. How many are left?';
+ }else if(mode==='cmp'){
+  var m=hard?20:10,p=rnd(0,m),r=rnd(0,m);
+  while(r===p)r=rnd(0,m);
+  var big=Math.random()<.5;
+  q.prompt='Which number is '+(big?'BIGGER':'SMALLER')+'?';
+  q.say=big?'Bigger means more.':'Smaller means fewer.';
+  q.vis='';q.ans=big?Math.max(p,r):Math.min(p,r);q.opts=[p,r];q.two=true;
+  q.speak='Which number is '+(big?'bigger':'smaller')+'?';
+ }else{
+  var step=hard?pick([1,2,5,10]):1,st=step===10?rnd(0,3)*10:rnd(0,step===1?14:6),hole=rnd(1,3),seq=[];
+  for(var k=0;k<4;k++)seq.push(st+k*step);
+  q.ans=seq[hole];
+  q.prompt=step===1?'What number comes next?':'Count by '+step+'s!';
+  q.say=step===1?'Count up one at a time.':'Jump by '+step+' each time.';
+  q.vis='<div class="eq">'+seq.map(function(v,j){return j===hole?'<span class="blank">?</span>':'<span>'+v+'</span>';}).join('')+'</div>';
+  q.opts=opts(q.ans,60);q.speak=q.prompt;
+ }
+ return q;
+}
+function header(){
+ return '<div class="top"><button class="icon" id="home" aria-label="Home">🏠</button><span class="pill">⭐ '+total+'</span><button class="icon" id="mute" aria-label="Sound on or off">'+(muted?'🔇':'🔊')+'</button></div>';
+}
+function wire(){
+ var h=document.getElementById('home');if(h)h.onclick=menu;
+ var m=document.getElementById('mute');
+ if(m)m.onclick=function(){muted=!muted;m.textContent=muted?'🔇':'🔊';};
+}
+function menu(){
+ var html=header()+'<div class="card hero"><span class="frog hop">🐸</span><h1>Hop’s Math Pond</h1><p style="margin-top:8px;font-size:1.2rem">Pick a game and help Hop jump across the pond!</p></div><div class="menu">';
+ MODES.forEach(function(m){html+='<button class="mode" data-m="'+m.id+'" style="background:'+m.c+'"><span class="e">'+m.e+'</span><span>'+m.name+'<small>'+m.desc+'</small></span></button>';});
+ html+='</div><div class="card hero"><h2>Choose Hop’s voice</h2><div class="row" style="margin-top:12px"><button class="big'+(voiceKind==='teacher'?'':' alt')+'" data-v="teacher">👩‍🏫 Teacher</button><button class="big'+(voiceKind==='child'?'':' alt')+'" data-v="child">🧒 Kid</button></div></div>';
+ app.innerHTML=html;
+ wire();
+ Array.prototype.forEach.call(app.querySelectorAll('[data-v]'),function(b){b.onclick=function(){
+  voiceKind=b.getAttribute('data-v');
+  try{localStorage.setItem('hop-voice',voiceKind);}catch(e){}
+  Array.prototype.forEach.call(app.querySelectorAll('[data-v]'),function(x){x.className='big'+(x===b?'':' alt');});
+  speak(voiceKind==='child'?'Hi! Let’s hop and count together!':'Hello, friend! Let’s practice math together.');
+ };});
+ Array.prototype.forEach.call(app.querySelectorAll('.mode'),function(b){b.onclick=function(){play(b.getAttribute('data-m'));};});
+}
+function play(mode){
+ var N=10,i=0,score=0,tries=0,q,streak=0,miss=0;LV=lvls[mode]||1;
+ function show(){
+  q=make(mode,i);tries=0;
+  var pads='';for(var k=0;k<N;k++)pads+='<span class="pad '+(k<i?'done':k===i?'now':'')+'"></span>';
+  var a='';q.opts.forEach(function(o){a+='<button class="ans" data-v="'+o+'"'+(q.sm?' style="font-size:1.8rem"':'')+'>'+o+'</button>';});
+  app.innerHTML=header()+'<div style="text-align:center;font-weight:700;font-size:1.1rem">Level '+LV+' of 5</div><div class="pads" aria-label="Question '+(i+1)+' of '+N+'">'+pads+'</div>'+
+   '<div class="card q"><span class="frog" id="frog">🐸</span><div class="prompt">'+q.prompt+'</div>'+q.vis+
+   '<button class="big alt" id="hear" style="font-size:1.1rem;padding:8px 18px">🔊 Hear it</button></div>'+
+   '<div class="say" id="say" aria-live="polite">'+q.say+'</div>'+
+   '<div class="answers" style="'+(q.two?'grid-template-columns:repeat(2,1fr)':'')+'">'+a+'</div>';
+  wire();
+  document.getElementById('hear').onclick=function(){speak(q.speak);};
+  Array.prototype.forEach.call(app.querySelectorAll('.ans'),function(b){b.onclick=function(){check(b);};});
+ }
+ function check(b){
+  var v=b.getAttribute('data-v'),say=document.getElementById('say');
+  if(v===String(q.ans)){
+   var lvlMsg='';
+   if(tries===0){score++;streak++;miss=0;if(streak>=2&&LV<5){LV++;streak=0;lvlMsg=' Level up! ⬆️';}}
+   else{streak=0;miss++;if(miss>=2&&LV>1){LV--;miss=0;}}
+   lvls[mode]=LV;try{localStorage.setItem('hop-lv',JSON.stringify(lvls));}catch(e){}
+   b.classList.add('ok');
+   Array.prototype.forEach.call(app.querySelectorAll('.ans'),function(x){x.disabled=true;});
+   var f=document.getElementById('frog');f.classList.add('hop');
+   say.textContent=pick(['Great job!','You got it!','Hop hop hooray!','Super!','Awesome!'])+lvlMsg;
+   beep([523,659,784]);total++;save();
+   document.querySelector('.pill').textContent='⭐ '+total;
+   setTimeout(function(){i++;if(i>=N)end();else show();},1100);
+  }else{
+   tries++;b.classList.add('no');b.disabled=true;
+   say.textContent=pick(['Almost! Try again.','Not quite. You can do it!','Oops! Look again.']);
+   beep([220],'triangle');
+  }
+ }
+ function end(){
+  var st=score>=9?3:score>=6?2:1,s='';
+  for(var k=0;k<3;k++)s+=k<st?'⭐':'☆';
+  confetti();beep([523,659,784,1047]);
+  app.innerHTML=header()+'<div class="card hero"><span class="frog hop">🐸</span><h2 style="margin-top:8px">Hop made it across!</h2><div class="stars">'+s+'</div><p style="font-size:1.4rem;font-weight:600">'+score+' out of '+N+' on the first try</p></div>'+
+   '<div class="row"><button class="big" id="again">Play again</button><button class="big alt" id="menu">More games</button></div>';
+  wire();
+  document.getElementById('again').onclick=function(){play(mode);};
+  document.getElementById('menu').onclick=menu;
+ }
+ show();
+ setTimeout(function(){speak(q.speak);},300);
+}
+menu();
+})();
+</script>
+</body>
+</html>
