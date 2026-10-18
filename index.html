@@ -110,6 +110,10 @@ main{gap:10px;padding:12px}
 .sw{width:40px;height:40px;border-radius:50%;border:4px solid var(--card);box-shadow:0 3px 0 var(--shade)}
 .sw.on,.tl.on{outline:4px solid var(--sun)}
 .tl{width:46px;height:46px;border-radius:50%;border:0;font-size:1.4rem;background:var(--btn);box-shadow:0 3px 0 var(--shade)}
+.pas{text-align:left;max-height:30vh;overflow:auto;background:var(--btn);border-radius:16px;padding:10px 14px;width:100%;line-height:1.35}
+.pas b{display:block;margin-bottom:4px}.pas p{margin:0}
+.answers.l .ans{font-size:1.15rem;font-weight:600;text-align:left;padding:12px 14px;line-height:1.25}
+.q .prompt{overflow-wrap:anywhere}
 </style>
 </head>
 <body>
@@ -136,7 +140,8 @@ var MODES=[
  {id:'ops',e:'🧮',name:'Order of operations',desc:'Do the steps in order',c:'#ffe0a3'},
  {id:'shapes',e:'🔷',name:'Shapes',desc:'Name and count sides',c:'#c4b5f5'},
  {id:'length',e:'📏',name:'Measure length',desc:'Use a ruler',c:'#9fe3a6'},
- {id:'data',e:'📊',name:'Graphs',desc:'Read picture graphs',c:'#ffd96b'}
+ {id:'data',e:'📊',name:'Graphs',desc:'Read picture graphs',c:'#ffd96b'},
+ {id:'read',e:'📚',name:'Reading',desc:'Read a story and answer',c:'#ffd0e8'}
 ];
 var ITEMS=['🍎','⭐','🐞','🐟','🍪','🎈','🦋','🍓'];
 var total=0, muted=false, ctx=null, LV=1, lvls={};
@@ -206,7 +211,7 @@ function opts(ans,max){
  return Object.keys(s).map(Number).sort(function(){return Math.random()-.5;});
 }
 var GN=['Kindergarten','1st grade','2nd grade','3rd grade','4th grade','5th grade'];
-var GM={count:[0,1],add:[0,1,2,3,4],sub:[0,1,2,3,4],cmp:[0,1,2,3,4,5],next:[0,1,2],tens:[1,2,3,4,5],miss:[1,2],word:[0,1,2,3,4,5],time:[1,2,3],mult:[3,4,5],div:[3,4,5],frac:[3,4,5],dec:[4,5],round:[3,4,5],area:[3,4,5],ops:[5],shapes:[0,1,2],length:[0,1,2],data:[0,1,2]};
+var GM={count:[0,1],add:[0,1,2,3,4],sub:[0,1,2,3,4],cmp:[0,1,2,3,4,5],next:[0,1,2],tens:[1,2,3,4,5],miss:[1,2],word:[0,1,2,3,4,5],time:[1,2,3],mult:[3,4,5],div:[3,4,5],frac:[3,4,5],dec:[4,5],round:[3,4,5],area:[3,4,5],ops:[5],shapes:[0,1,2],length:[0,1,2],data:[0,1,2],read:[0,1,2,3,4,5]};
 var TIPS={count:'Have your child touch each item and count out loud, moving counted items to one side.',add:'Practice counting on: start at the bigger number and count up. Use fingers, toys, or a number line.',sub:'Try counting back, or use objects: start with the total, take some away, and count what is left.',cmp:'Line up two groups of objects to see which has more. For bigger numbers, compare the left digit first.',next:'Say number patterns out loud together, like 5, 10, 15. A hundreds chart helps.',tens:'Use dimes (tens) and pennies (ones), or blocks, to build numbers.',miss:'Ask: what do I add to get there? Count up from the small number to the total.',word:'Read the story together, circle the numbers, and ask: are we joining or taking away?',time:'Use an analog clock at home. Short hand is the hour, long hand is the minutes (each number is 5).'};
 var GR=1,hasGrade=false,due=false;
 try{var _g=localStorage.getItem('hop-grade');if(_g!==null){GR=parseInt(_g,10)||0;hasGrade=true;}}catch(e){}
@@ -555,8 +560,53 @@ function gData(){
  q.speak=q.prompt.replace(/[^\x00-\x7F]/g,'');
  return q;
 }
+Object.assign(TIPS,{read:'Read together out loud, then ask your child to retell the story in their own words. Have them point to the sentence that proves their answer.'});
+var RB=[
+[
+['The Red Ball','Sam has a red ball. Sam kicks the ball. The ball rolls to the dog.',[['d','What color is the ball?','red','blue','green','The story says Sam has a red ball.'],['d','Who gets the ball?','the dog','Sam','a cat','The ball rolls to the dog.']]],
+['Rainy Day','It is raining. Mia puts on her boots. She jumps in a puddle. Splash!',[['d','What does Mia put on?','her boots','a hat','a coat','The story says Mia puts on her boots.'],['i','Why does Mia put on boots?','It is raining.','It is snowing.','It is night.','The story starts with rain. Boots keep feet dry in puddles.']]],
+['The Cat Nap','A cat sat in the sun. The cat was warm. Then the cat took a nap.',[['d','Where did the cat sit?','in the sun','in a box','on a bed','The story says the cat sat in the sun.'],['i','What did the cat do last?','took a nap','ate food','ran away','The last sentence says the cat took a nap.']]],
+['At the Park','Tom and Ana go to the park. Tom likes the slide. Ana likes the swing. They play until the sun goes down.',[['d','What does Ana like?','the swing','the slide','the sand','The story says Ana likes the swing.'],['d','When do they stop playing?','when the sun goes down','when it rains','when they eat lunch','The last sentence says they play until the sun goes down.']]]
+],
+[
+['Ben’s Garden','Ben planted a seed in a pot. He gave it water every day. He put it by the window. One day, a tiny green leaf popped up. Ben smiled.',[['d','Where did Ben put the pot?','by the window','in the shed','under the bed','The story says he put it by the window.'],['d','What did Ben do every day?','gave it water','dug it up','moved it','The story says he gave it water every day.'],['i','Why did Ben smile?','His plant started to grow.','He lost his seed.','It started to rain.','A tiny green leaf popped up, so his plant was growing.']]],
+['The Lost Hat','Lily could not find her hat. She looked under the bed. She looked in the closet. At last, she saw it on the dog’s head!',[['d','Where was the hat?','on the dog’s head','in the closet','under the bed','The last sentence says it was on the dog’s head.'],['i','How did Lily probably feel at the end?','happy and surprised','sad','sleepy','She finally found her hat in a funny place, so she was probably happy and surprised.']]],
+['Bees','Bees make honey. They fly from flower to flower. They collect sweet nectar. Then they carry it back to the hive.',[['m','What is this mostly about?','how bees make honey','how to plant flowers','why the sky is blue','Every sentence tells a step in how bees make honey.'],['d','Where do bees carry the nectar?','to the hive','to the garden','to the river','The story says they carry it back to the hive.']]],
+['Winter Birds','In winter, it is cold and snowy. Some birds fly to warm places. Other birds stay and fluff up their feathers to keep warm. Kind people put out seeds so the birds have food.',[['d','What do some birds do to stay warm?','fluff up their feathers','dig holes','wear coats','The story says they fluff up their feathers.'],['i','Why do people put out seeds?','to feed the birds','to grow a garden','to make snow','The story says it gives the birds food.'],['m','What is this mostly about?','how birds get through winter','how to build a snowman','where bees live','Every sentence is about birds and winter.']]]
+],
+[
+['Pip the Penguin','Pip the penguin lived on the ice. All the other penguins could slide on their bellies, but Pip kept tipping over. He felt sad. His friend Maya said, “Try again, and lean forward.” Pip leaned forward and whoosh! He zoomed across the ice. “I did it!” he cheered.',[['d','What did Maya tell Pip to do?','lean forward','jump high','go home','Maya said, “Try again, and lean forward.”'],['v','In the story, what does “zoomed” mean?','moved very fast','fell down','stopped','Pip went whoosh across the ice, so zoomed means moved very fast.'],['m','What lesson does the story teach?','Keep trying and you can learn.','Never play on ice.','Penguins do not like friends.','Pip kept trying, listened to a friend, and finally did it.']]],
+['Making Bread','Grandpa mixes flour, water, and yeast to make dough. Then he lets the dough rest for an hour. The yeast makes the dough puff up and grow. Finally, he bakes it in a hot oven until it is golden brown.',[['d','What does Grandpa do after he mixes the dough?','lets it rest','bakes it','eats it','The word “then” tells us the dough rests next.'],['d','What makes the dough puff up?','yeast','water','the oven','The story says the yeast makes the dough puff up and grow.']]],
+['Why Leaves Change','In fall, many leaves change from green to red, orange, and yellow. Leaves are green because of something called chlorophyll. When days get shorter, trees stop making it, and the other colors show.',[['m','What is the main idea?','Leaves change color in fall.','Trees need more water.','Leaves are always green.','The whole passage explains how leaves change color in fall.'],['i','Why do leaves lose their green color?','The trees stop making the green stuff.','Birds paint them.','The sun gets hotter.','When days get shorter, trees stop making chlorophyll, so the green fades.']]],
+['The Lost Tooth','Eli wiggled his loose tooth all day. At dinner, he bit into a crunchy apple, and out popped the tooth! He wrapped it in a tissue and put it under his pillow. In the morning, a shiny coin was waiting. Eli grinned from ear to ear.',[['d','What was under Eli’s pillow in the morning?','a shiny coin','a tissue','an apple','The story says a shiny coin was waiting.'],['v','What does “grinned from ear to ear” mean?','smiled very big','felt sad','covered his ears','He was happy about the coin, so it means a very big smile.'],['i','What made the tooth come out?','biting a crunchy apple','a hard pillow','a tissue','At dinner he bit into a crunchy apple and the tooth popped out.']]]
+],
+[
+['The Lemonade Stand','Nora wanted to buy a new soccer ball, so she decided to sell lemonade. She asked her dad to help her squeeze lemons and stir in sugar. On Saturday, she set up a table by the sidewalk with a sign that read “Cold Lemonade 50¢.” By noon, it was so hot that a long line of thirsty neighbors had formed. By evening, Nora had earned enough money. She counted her coins twice and grinned.',[['d','Why did Nora sell lemonade?','to buy a soccer ball','to win a contest','because her dad asked','The first sentence says she wanted to buy a new soccer ball.'],['i','Why did a long line form by noon?','It was hot and people were thirsty.','The lemonade was free.','Nora played music.','The story says it was so hot and the neighbors were thirsty.'],['v','What does “earned” mean?','got money for work','lost','borrowed','Nora worked and sold lemonade until she had enough money.']]],
+['Octopus Escape','An octopus has no bones, so it can squeeze through very tiny spaces. Even a large octopus can fit through a hole the size of its eye. An octopus can also change color to blend in with rocks and plants. This helps it hide from sharks and other hungry animals.',[['m','What is the main idea?','Octopuses have special ways to stay safe.','Octopuses are the biggest sea animals.','Sharks cannot see colors.','The passage tells how octopuses squeeze and change color to hide.'],['d','Why can an octopus squeeze through tiny spaces?','It has no bones.','It is very small.','It has long legs.','The first sentence says it has no bones.'],['v','In the passage, “blend in” means…','look like what is around it','swim fast','make a loud noise','The octopus changes color to match rocks and plants.']]],
+['The New Kid','On Mia’s first day at a new school, her stomach felt full of butterflies. She sat alone at lunch, looking at her sandwich. Then a girl with a purple backpack plopped down beside her. “I’m Zoe,” she said. “Want to play four square after we eat?” Mia felt the butterflies flutter away.',[['i','Why did Mia feel butterflies in her stomach?','She was nervous.','She was hungry.','She was tired of sandwiches.','It was her first day at a new school, which can make anyone nervous.'],['d','Who sat next to Mia?','Zoe','Nora','a teacher','A girl named Zoe plopped down beside her.'],['i','What does “the butterflies flutter away” show?','Mia stopped feeling nervous.','Real butterflies left the room.','Mia got scared.','Zoe was friendly, so Mia relaxed.']]],
+['Sea Turtle Journey','Each spring, a mother sea turtle crawls onto the beach where she was born. Using her flippers, she digs a deep hole in the sand and lays about a hundred eggs. After covering the nest, she returns to the ocean and never sees her babies. Weeks later, the hatchlings dig out and scramble toward the glowing waves.',[['d','Where does a mother sea turtle lay her eggs?','in a hole in the sand','in the ocean','in a tree','She digs a deep hole in the sand and lays her eggs.'],['i','What can you tell about the baby turtles?','They find the ocean on their own.','Their mother leads them.','They stay on the beach forever.','The mother leaves right after covering the nest, so the babies get to the waves alone.'],['v','What does “hatchlings” mean?','baby turtles that just came out of eggs','large turtles','turtle nests','The hatchlings dig out of the nest after the eggs hatch.']]]
+],
+[
+['Rainforest Layers','A rainforest has four main layers. At the top, the emergent layer holds the tallest trees, which poke out above everything else and get the most sunlight. Beneath it, the canopy forms a thick green roof that shelters monkeys, birds, and snakes. The understory is dim and damp, home to small trees and large insects. On the forest floor, very little sunlight arrives, so fallen leaves rot quickly and feed the soil.',[['d','Which layer gets the most sunlight?','the emergent layer','the canopy','the forest floor','The tallest trees poke out above everything else and get the most sunlight.'],['i','Why is the understory dim?','The canopy blocks most of the sunlight.','It has no plants.','It is the tallest layer.','The canopy is a thick green roof above the understory.'],['m','What is the best summary?','A rainforest has layers with different conditions and animals.','Monkeys are the main animals in a rainforest.','The forest floor is the most important layer.','The passage describes each layer and what lives or happens there.']]],
+['The Inventor’s Notebook','Maya filled her notebook with sketches of strange machines. When her first flying machine crashed into the pond, her classmates laughed. Maya was embarrassed, but she took out her notebook and wrote, “Wings too heavy.” The next week, she built a lighter version from paper and thin sticks. It sailed across the whole playground. “Every failure is a clue,” Maya told her friends.',[['i','What does Maya’s reaction to the crash show about her?','She learns from mistakes.','She gives up easily.','She enjoys being laughed at.','She wrote down what went wrong and fixed it.'],['v','What does “embarrassed” mean here?','uncomfortable in front of others','very proud','sleepy','Her classmates laughed, so she felt uncomfortable.'],['d','How did Maya change her second machine?','She made it lighter.','She made it bigger.','She used metal.','She built a lighter version from paper and thin sticks.']]]
+],
+[
+['The Honeybee Dance','Honeybees communicate with a remarkable dance. When a worker bee finds a good patch of flowers, she returns to the hive and waggles her body in a figure-eight pattern. The angle of the waggle shows other bees which direction to fly in relation to the sun, and the length of the waggle tells them how far away the flowers are. Scientists were amazed that such tiny insects could share such precise information.',[['m','Which sentence best states the main idea?','Honeybees use a dance to tell each other where food is.','Honeybees are the only insects that dance.','Scientists study bees to make honey.','The passage explains how the dance shares food locations.'],['v','What does “precise” most nearly mean?','exact','confusing','loud','The bees share exact directions and distances.'],['d','What does the length of the waggle tell the other bees?','how far away the flowers are','what color the flowers are','how many bees to bring','The passage says the length tells how far away the flowers are.']]],
+['Debate Day','Jordan had rehearsed her speech all week, but as she stepped to the podium, her palms felt damp and her notes seemed to blur. She took a slow breath and remembered what her coach had said: “Nobody expects perfection—just honesty.” Looking at the friendly faces in the front row, she began to speak. By the time she finished, her voice was steady, and the audience applauded warmly.',[['i','How did Jordan feel when she first stepped to the podium?','nervous','bored','angry','Her damp palms and blurry notes are signs of nervousness.'],['m','Which theme does the passage best support?','Staying calm and being honest helps you face a challenge.','Practice is a waste of time.','Audiences always judge harshly.','Jordan breathed, remembered the advice, and did well.'],['v','What does “rehearsed” mean?','practiced beforehand','forgot','read quietly','She worked on her speech all week before giving it.']]]
+]
+];
+var recentR=[];
+function gRead(){
+ var bank=RB[GR],ok=LV<=2?'d':LV===3?'dv':'dvim',pool=[],all=[];
+ bank.forEach(function(ps,pi){ps[2].forEach(function(x,xi){var it=[ps,x,pi+'-'+xi];all.push(it);if(ok.indexOf(x[0])>-1)pool.push(it);});});
+ if(!pool.length)pool=all;
+ var fresh=pool.filter(function(c){return recentR.indexOf(c[2])<0;});
+ var c=pick(fresh.length?fresh:pool);recentR.push(c[2]);if(recentR.length>Math.max(1,Math.min(6,pool.length-1)))recentR.shift();
+ var ps=c[0],x=c[1];
+ return{prompt:x[1],say:'Read the story, then pick the best answer.',vis:"<div class='pas' style='font-size:"+(GR<=1?'1.45rem':'1.1rem')+"'><b>📖 "+ps[0]+'</b><p>'+ps[1]+'</p></div>',ans:x[2],opts:shuf([x[2],x[3],x[4]]),list:1,noauto:GR>=3?1:0,txt:ps[0]+': '+x[1],speak:ps[1]+' '+x[1],how:x[5]+' Go back to the story and look for clues.',viz:''};
+}
 function mkQ(mode){
- var f={count:gCount,add:GR>=3?gAddBig:gAdd,sub:GR>=3?gSubBig:gSub,cmp:GR>=3?gCmpBig:gCmp,next:gNext,tens:GR>=3?gPlace:gTens,miss:gMiss,word:GR>=3?gWord3:gWord,time:GR>=3?gTime3:gTime,mult:gMult,div:gDiv,frac:gFrac,dec:gDec,round:gRound,area:gArea,ops:gOps,shapes:gShapes,length:gLength,data:gData}[mode];
+ var f={count:gCount,add:GR>=3?gAddBig:gAdd,sub:GR>=3?gSubBig:gSub,cmp:GR>=3?gCmpBig:gCmp,next:gNext,tens:GR>=3?gPlace:gTens,miss:gMiss,word:GR>=3?gWord3:gWord,time:GR>=3?gTime3:gTime,mult:gMult,div:gDiv,frac:gFrac,dec:gDec,round:gRound,area:gArea,ops:gOps,shapes:gShapes,length:gLength,data:gData,read:gRead}[mode];
  var q=f();q.mode=mode;return q;
 }
 function header(){
@@ -613,15 +663,15 @@ function play(mode){
  function show(){
   q=mkQ(mode);padImg=null;
   var pads='',k;for(k=0;k<N;k++)pads+='<span class="pad '+(k<i?(res[k]?'done':'bad'):k===i?'now':'')+'"></span>';
-  var a='',fl=Math.max.apply(null,q.opts.map(function(o){return String(o).length;})),fs=q.sm?'1.8rem':fl>=8?'1.15rem':fl>=6?'1.4rem':fl>=5?'1.9rem':'';q.opts.forEach(function(o){a+='<button class="ans" data-v="'+o+'"'+(fs?' style="font-size:'+fs+'"':'')+'>'+o+'</button>';});
+  var a='',fl=Math.max.apply(null,q.opts.map(function(o){return String(o).length;})),fs=q.list?'':q.sm?'1.8rem':fl>=8?'1.15rem':fl>=6?'1.4rem':fl>=5?'1.9rem':'';q.opts.forEach(function(o){a+='<button class="ans" data-v="'+o+'"'+(fs?' style="font-size:'+fs+'"':'')+'>'+o+'</button>';});
   app.innerHTML=header()+'<div style="text-align:center;font-weight:700;font-size:1.1rem">'+GN[GR]+' · Level '+LV+' of 5</div><div class="pads" aria-label="Question '+(i+1)+' of '+N+'">'+pads+'</div>'+
    '<div class="card q"><span class="frog" id="frog">🐸</span><div class="prompt">'+q.prompt+'</div>'+q.vis+'<div class="row" style="gap:8px"><button class="big alt" id="hear" style="font-size:1rem;padding:8px 14px">🔊 Hear it</button><button class="big alt" id="scr" style="font-size:1rem;padding:8px 14px">✏️ Scratch paper</button></div></div>'+
-   '<div class="say" id="say" aria-live="polite">'+q.say+'</div><div class="answers" style="'+(q.two?'grid-template-columns:repeat(2,1fr)':'')+'">'+a+'</div><div id="ls"></div>';
+   '<div class="say" id="say" aria-live="polite">'+q.say+'</div><div class="answers'+(q.list?' l':'')+'" style="'+(q.two?'grid-template-columns:repeat(2,1fr)':q.list?'grid-template-columns:1fr':'')+'">'+a+'</div><div id="ls"></div>';
   wire();
   document.getElementById('hear').onclick=function(){say2(q.speak);};
   document.getElementById('scr').onclick=openPad;
   Array.prototype.forEach.call(app.querySelectorAll('.ans'),function(b){b.onclick=function(){check(b);};});
-  setTimeout(function(){say2(q.speak);},250);
+  if(!q.noauto)setTimeout(function(){say2(q.speak);},250);
  }
  function openPad(){
   var o=document.createElement('div');o.className='padov';
