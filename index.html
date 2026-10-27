@@ -112,8 +112,11 @@ main{gap:10px;padding:12px}
 .tl{width:46px;height:46px;border-radius:50%;border:0;font-size:1.4rem;background:var(--btn);box-shadow:0 3px 0 var(--shade)}
 .pas{text-align:left;max-height:30vh;overflow:auto;background:var(--btn);border-radius:16px;padding:10px 14px;width:100%;line-height:1.35}
 .pas b{display:block;margin-bottom:4px}.pas p{margin:0}
-.answers.l .ans{font-size:1.15rem;font-weight:600;text-align:left;padding:12px 14px;line-height:1.25}
+.answers.l .ans{font-size:1.05rem;font-weight:600;text-align:left;padding:10px 12px;line-height:1.2}
 .q .prompt{overflow-wrap:anywhere}
+.vrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--shade)}
+.vrow span{flex:1;display:flex;flex-direction:column}
+.vrow small{opacity:.7}
 </style>
 </head>
 <body>
@@ -167,28 +170,54 @@ function beep(freqs,type){
   });
  }catch(e){}
 }
-var voiceKind='teacher';
-try{voiceKind=localStorage.getItem('hop-voice')||'teacher';}catch(e){}
+var voiceKind='soft';
+try{voiceKind=localStorage.getItem('hop-voice')||'soft';}catch(e){}
 function findVoice(){
  try{
   var vs=window.speechSynthesis.getVoices().filter(function(v){return /^en/i.test(v.lang);});
   var f=vs.filter(function(v){return /samantha|zira|jenny|aria|susan|karen|moira|tessa|victoria|fiona|serena|female|google us english|google uk english female/i.test(v.name);});
   var pn=null;try{pn=localStorage.getItem('hop-vname');}catch(e){}
   var pv=pn&&vs.filter(function(v){return v.name===pn;})[0];
-  return pv||f[0]||vs[0]||null;
+  var pr=f.filter(function(v){return /enhanced|premium|siri|natural|neural/i.test(v.name);});
+  var sv=voiceKind==='soft'?vs.filter(function(v){return /ava|allison|samantha|moira|tessa|karen|serena|joelle|zoe|susan|nicky/i.test(v.name);}):[];
+  var sp=sv.filter(function(v){return /enhanced|premium|siri/i.test(v.name);});
+  return pv||sp[0]||sv[0]||pr[0]||f[0]||vs[0]||null;
  }catch(e){return null;}
 }
 try{window.speechSynthesis.getVoices();}catch(e){}
+var PK={idx:null,buf:{},cur:'',src:null};
+function pkKey(t){return String(t).toLowerCase().replace(/’/g,"'").replace(/[.!?\s]+$/,'').trim();}
+function pkInit(){try{fetch('voices/index.json').then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(j){PK.idx=j;try{var spk=localStorage.getItem('hop-pack');PK.cur=spk===null?'af_heart_kid':spk;}catch(e){PK.cur='af_heart_kid';}if(PK.cur&&!j[PK.cur])PK.cur='';if(PK.cur)pkLoad(PK.cur);fillPk();}).catch(function(){});}catch(e){}}
+function pkLoad(id,cb){
+ var e=PK.idx&&PK.idx[id];if(!e)return;
+ if(PK.buf[id]){if(cb)cb();return;}
+ try{ctx=ctx||new (window.AudioContext||window.webkitAudioContext)();}catch(x){return;}
+ fetch('voices/'+e.file).then(function(r){return r.arrayBuffer();}).then(function(ab){ctx.decodeAudioData(ab,function(b){PK.buf[id]=b;if(cb)cb();},function(){});}).catch(function(){});
+}
+function pkSpeak(t){
+ if(!PK.cur||!PK.idx)return false;var e=PK.idx[PK.cur],b=PK.buf[PK.cur];if(!e||!b)return false;
+ var m=e.map[pkKey(t)];if(!m)return false;
+ try{if(ctx.state==='suspended')ctx.resume();if(PK.src){try{PK.src.stop();}catch(x){}}
+  var sr=ctx.createBufferSource();sr.buffer=b;sr.connect(ctx.destination);sr.start(0,m[0],m[1]);PK.src=sr;try{window.speechSynthesis.cancel();}catch(x){}return true;}catch(x){return false;}
+}
+function fillPk(){
+ var b=document.getElementById('pkbox'),sel=document.getElementById('pksel');if(!b||!sel||!PK.idx)return;
+ var ids=Object.keys(PK.idx);if(!ids.length)return;b.style.display='block';
+ sel.innerHTML='<option value="">Off (use the iPad voice)</option>'+ids.map(function(id){return '<option value="'+id+'"'+(id===PK.cur?' selected':'')+'>'+PK.idx[id].name+'</option>';}).join('');
+ sel.onchange=function(){PK.cur=sel.value;try{localStorage.setItem('hop-pack',PK.cur);}catch(e){}if(PK.cur)pkLoad(PK.cur,function(){speak('Great choice! This is my new voice.');});};
+}
 function speak(t){
  if(muted)return;
+ if(pkSpeak(t))return;
  try{
   window.speechSynthesis.cancel();
   var u=new SpeechSynthesisUtterance(t),v=findVoice();
   if(v)u.voice=v;
   if(voiceKind==='child'){u.rate=1.0;u.pitch=1.9;}
-  else{u.rate=0.85;u.pitch=1.0;}
+  else if(voiceKind==='soft'){u.rate=0.78;u.pitch=0.95;u.volume=0.85;}else if(voiceKind==='reader'){u.rate=0.8;u.pitch=1.15;}else{u.rate=0.85;u.pitch=1.0;}
   var sp=1;try{sp=parseFloat(localStorage.getItem('hop-speed'))||1;}catch(e){}
   u.rate*=sp;
+  try{var pp=parseFloat(localStorage.getItem('hop-pitch'));if(pp)u.pitch=pp;}catch(e){}
   window.speechSynthesis.speak(u);
  }catch(e){}
 }
@@ -209,7 +238,7 @@ function items(n,goneCount){
 function opts(ans,max){
  var s={};s[ans]=1;
  var guard=0;
- while(Object.keys(s).length<3&&guard++<60){
+ while(Object.keys(s).length<4&&guard++<60){
   var v=ans+rnd(-3,3);
   if(v>=0&&v<=max&&v!==ans)s[v]=1;
  }
@@ -224,7 +253,7 @@ var ST={r:0,w:0,m:{},miss:[]};
 try{var _s=JSON.parse(localStorage.getItem('hop-stats')||'null');if(_s&&_s.m)ST=_s;}catch(e){}
 function saveST(){try{localStorage.setItem('hop-stats',JSON.stringify(ST));}catch(e){}}
 function say2(t){speak(String(t).replace(/[\u{1F300}-\u{1FAFF}\u2600-\u27BF\uFE0F]/gu,''));}
-function near(ans,list,max,min){min=min||0;var s={};s[ans]=1;list.forEach(function(v){if(v>=min&&v<=max&&Object.keys(s).length<3)s[v]=1;});var g=0;while(Object.keys(s).length<3&&g++<80){var v=ans+rnd(-3,3);if(v>=min&&v<=max)s[v]=1;}return Object.keys(s).map(Number).sort(function(){return Math.random()-.5;});}
+function near(ans,list,max,min){min=min||0;var s={};s[ans]=1;list.forEach(function(v){if(v>=min&&v<=max&&Object.keys(s).length<4)s[v]=1;});var g=0;while(Object.keys(s).length<4&&g++<120){var v=ans+rnd(-3,3);if(v>=min&&v<=max)s[v]=1;}return Object.keys(s).map(Number).sort(function(){return Math.random()-.5;});}
 function chips(arr,hi){return "<div class='chips'>"+arr.map(function(v,i){return "<span class='chip"+(hi&&hi.indexOf(i)>-1?" hi":"")+"'>"+v+"</span>";}).join('<b>›</b>')+"</div>";}
 function hops(a,n,d){var r=[a];for(var i=1;i<=n;i++)r.push(a+d*i);return chips(r,[0,n]);}
 function eqv(parts){return "<div class='eq'>"+parts.map(function(p){return p==='?'?"<span class='blank'>?</span>":'<span>'+p+'</span>';}).join('')+'</div>';}
@@ -322,7 +351,7 @@ function gTime(){
  var pad=function(n){return ('0'+n).slice(-2);},tm=function(h,m){return h+':'+pad(m);},h=rnd(1,12),mi=0,fine=GR===2&&LV>=3;
  if(fine)mi=rnd(0,11)*5;else if(LV>=3||GR===2)mi=Math.random()<.5?30:0;
  var an=tm(h,mi),s={};s[an]=1;
- [tm(h%12+1,mi),tm((h+10)%12+1,mi),tm(h,(mi+(fine?5:30))%60)].forEach(function(v){if(Object.keys(s).length<3)s[v]=1;});
+ [tm(h%12+1,mi),tm((h+10)%12+1,mi),tm(h,(mi+(fine?5:30))%60),tm((h+1)%12+1,mi)].forEach(function(v){if(Object.keys(s).length<4)s[v]=1;});
  return{prompt:'What time is it?',say:'The short hand shows the hour.',vis:clock(h,mi),ans:an,opts:Object.keys(s).sort(function(){return Math.random()-.5;}),sm:1,txt:'What time is on the clock?',speak:'What time is it?',
  how:mi===0?'The short hand points to '+h+' and the long hand points to the 12. That means '+h+" o'clock, or "+an+'.':'The short hand is at '+h+'. The long hand points to the '+mi/5+', and each number counts 5 minutes, so that is '+mi+' minutes. The time is '+an+'.',viz:clock(h,mi)};
 }
@@ -333,7 +362,7 @@ function simp(n,d){var g=gcd(n,d);return n/g+'/'+d/g;}
 function tr(x){return String(+x.toFixed(4));}
 function shuf(a){return a.slice().sort(function(){return Math.random()-.5;});}
 function ds(ans,steps){return near(ans,shuf(steps).map(function(s){return ans+s;}),1e9,0);}
-function fo(ans,list,fill){var s={};s[ans]=1;list.forEach(function(v){if(Object.keys(s).length<3)s[v]=1;});var g=0;while(Object.keys(s).length<3&&g++<60)s[fill?fill():rnd(1,9)+'/'+rnd(2,10)]=1;return shuf(Object.keys(s));}
+function fo(ans,list,fill){var s={};s[ans]=1;list.forEach(function(v){if(Object.keys(s).length<4)s[v]=1;});var g=0;while(Object.keys(s).length<4&&g++<80)s[fill?fill():rnd(1,9)+'/'+rnd(2,10)]=1;return shuf(Object.keys(s));}
 function grid(a,b,sq){if(a*b>144)return '';return "<div class='arr"+(sq?' sq':'')+"' style='--c:"+b+";grid-template-columns:repeat("+b+",1fr)'>"+'<i></i>'.repeat(a*b)+'</div>';}
 function fbar(n,d){var h="<div class='fb'>";for(var i=0;i<d;i++)h+='<span'+(i<n?" class='on'":'')+'></span>';return h+'</div>';}
 function rectSvg(l,w,ll,wl){var sc=Math.min(110/l,64/w),rw=l*sc,rh=w*sc,x=(160-rw)/2,y=(100-rh)/2;
@@ -514,7 +543,7 @@ function gOps(){
 }
 function gTime3(){
  var pad=function(n){return ('0'+n).slice(-2);},tm=function(h,m){return h+':'+pad(m);},h=rnd(1,12),mi=LV<=2?rnd(0,11)*5:rnd(0,59),an=tm(h,mi),s={};s[an]=1;
- [tm(h%12+1,mi),tm(h,(mi+5)%60),tm(h,(mi+59)%60),tm((h+10)%12+1,mi)].forEach(function(v){if(Object.keys(s).length<3)s[v]=1;});
+ [tm(h%12+1,mi),tm(h,(mi+5)%60),tm(h,(mi+59)%60),tm((h+10)%12+1,mi)].forEach(function(v){if(Object.keys(s).length<4)s[v]=1;});
  return{prompt:'What time is it?',say:'Count by 5s, then count the little ticks.',vis:clock(h,mi),ans:an,opts:shuf(Object.keys(s)),sm:1,txt:'What time is on the clock?',speak:'What time is it?',
   how:'The short hand is just past '+h+'. For the long hand, count by 5s for each number, then count each little tick as 1 minute. That is '+mi+' minutes. The time is '+an+'.',viz:clock(h,mi)};
 }
@@ -566,15 +595,15 @@ function gLength(){
   how:s===0?'Start at 0. Count each space to the end of the bar. It is '+n+' units long.':'The bar starts at '+s+' and ends at '+e+'. Count the spaces from '+s+' to '+e+', or subtract: '+e+' minus '+s+' is '+n+'.',viz:ruler(s,e,max)};
 }
 function gData(){
- var em=shuf(ITEMS).slice(0,3),mx=GR===0?5:GR===1?8:10,c=[];
- while(c.length<3){var v=rnd(1,mx);if(c.indexOf(v)<0)c.push(v);}
+ var em=shuf(ITEMS).slice(0,4),mx=GR===0?5:GR===1?8:10,c=[];
+ while(c.length<4){var v=rnd(1,mx);if(c.indexOf(v)<0)c.push(v);}
  var rows=function(nums){return em.map(function(e,i){return "<div class='stuff'>"+e.repeat(c[i])+(nums?" <b class='cnt'>"+c[i]+'</b>':'')+'</div>';}).join('');};
  var types=['count'];if(LV>=2)types.push('most');if(LV>=3){types.push('least');if(GR>=1)types.push('diff');}if(LV>=4&&GR>=1)types.push('total');
- var t=pick(types),k=rnd(0,2),q={vis:rows(false),viz:rows(true),say:'Count each row.'},mxi=c.indexOf(Math.max.apply(null,c)),mni=c.indexOf(Math.min.apply(null,c));
+ var t=pick(types),k=rnd(0,3),q={vis:rows(false),viz:rows(true),say:'Count each row.'},mxi=c.indexOf(Math.max.apply(null,c)),mni=c.indexOf(Math.min.apply(null,c));
  if(t==='count'){q.prompt='How many '+em[k]+' are there?';q.ans=c[k];q.opts=near(c[k],[c[k]+1,c[k]-1],12,0);q.how='Count the '+em[k]+' in its row. There are '+c[k]+'.';q.txt='Graph: how many '+em[k];}
  else if(t==='most'||t==='least'){var m=t==='most';q.prompt='Which row has the '+(m?'MOST':'FEWEST')+'?';q.ans=em[m?mxi:mni];q.opts=shuf(em);q.how='Count each row: '+c.join(', ')+'. The '+(m?'biggest':'smallest')+' number is '+c[m?mxi:mni]+', so '+(m?'most':'fewest')+' is '+em[m?mxi:mni]+'.';q.txt='Graph: which has the '+(m?'most':'fewest');}
  else if(t==='diff'){var i=mxi,j=mni;q.prompt='How many more '+em[i]+' than '+em[j]+'?';q.ans=c[i]-c[j];q.opts=near(q.ans,[q.ans+1,q.ans-1,c[i]],20,0);q.how='There are '+c[i]+' '+em[i]+' and '+c[j]+' '+em[j]+'. '+c[i]+' minus '+c[j]+' is '+q.ans+' more.';q.txt='Graph: how many more '+em[i]+' than '+em[j];}
- else{var tot=c[0]+c[1]+c[2];q.prompt='How many in all?';q.ans=tot;q.opts=near(tot,[tot+1,tot-1,tot+2],40,0);q.how='Add the rows: '+c.join(' plus ')+' is '+tot+'.';q.txt='Graph: how many in all';}
+ else{var tot=c.reduce(function(a,b){return a+b;},0);q.prompt='How many in all?';q.ans=tot;q.opts=near(tot,[tot+1,tot-1,tot+2],40,0);q.how='Add the rows: '+c.join(' plus ')+' is '+tot+'.';q.txt='Graph: how many in all';}
  q.speak=q.prompt.replace(/[^\x00-\x7F]/g,'');
  return q;
 }
@@ -643,10 +672,11 @@ function gReadBank(){
  var fresh=pool.filter(function(c){return recentR.indexOf(c[2])<0;});
  var c=pick(fresh.length?fresh:pool);recentR.push(c[2]);if(recentR.length>Math.max(1,Math.min(6,pool.length-1)))recentR.shift();
  var ps=c[0],x=c[1],opts=[x[2],x[3],x[4]],sat=LV>=4&&GR>=2;
- if(sat&&x[0]!=='s'){
+ if(true){
   var cand=[];
-  if(x[0]==='e'){cand=[ps[1].split('. ')[0]+'.'];}
-  else ps[2].forEach(function(y){if(y!==x&&y[0]!=='s'&&y[0]!=='e')cand.push(y[2]);});
+  if(x[0]==='e'){cand=ps[1].split('. ').map(function(t){return /[.!?”]$/.test(t)?t:t+'.';});}
+  else if(x[0]==='s'&&x[2].split(', ').length>=3&&x[2].indexOf('.')<0){var pts=x[2].split(', ');cand=[pts.slice().reverse().join(', ')];for(var pi=0;pi<12;pi++)cand.push(shuf(pts).join(', '));}
+  else ps[2].forEach(function(y){if(y!==x)cand.push(y[2]);});
   cand=cand.filter(function(v){return opts.indexOf(v)<0&&v!==x[2];});
   if(cand.length)opts.push(pick(cand));
  }
@@ -667,7 +697,7 @@ function scen(){
   sc={title:'The Lost '+cap1(it),lines:[n+' played at '+pl+' with '+his+' '+it+'.','Then '+he+' could not find '+his+' '+it+'!',n+' looked under a bench and behind a tree.','A friend named '+hn+' saw '+n+' looking sad.',hn+' pointed to '+fp+', and there was the '+it+'!',n+' hugged '+hn+' and said thank you.'],
   extra:n+' felt frantic as '+he+' searched everywhere.',
   ev:[n+' played with '+his+' '+it,n+' lost '+his+' '+it,n+' looked under a bench',hn+' saw '+n+' looking sad',n+' found the '+it],
-  d:[['What did '+n+' lose?',it,pickN(its,2,[it])],['Who helped '+n+'?',hn,pickN(HN,2,[hn])],['Where was the '+it+'?',fp,pickN(fps,2,[fp])]],
+  d:[['What did '+n+' lose?',it,pickN(its,3,[it])],['Who helped '+n+'?',hn,pickN(HN,3,[hn])],['Where was the '+it+'?',fp,pickN(fps,3,[fp])]],
   feel:['How did '+n+' feel when '+he+' could not find '+his+' '+it+'?','worried',['calm','sleepy']],feel2:['How did '+n+' feel at the end?','happy and thankful',['angry','bored']],
   pred:['What will '+n+' probably do next time at '+pl+'?','keep a close eye on '+his+' '+it,['leave '+his+' '+it+' behind','stop going outside']],
   main:['A child loses something and a friend helps find it.',['A child learns to swim.','A child goes shopping for shoes.']],theme:'Kind people help others when they are in need.',
@@ -678,7 +708,7 @@ function scen(){
   sc={title:'Never Giving Up',lines:[n+' wanted to '+sk+'.','But every time '+he+' tried, it did not work.',n+' felt like giving up.',adv+' said, “Try again, one small step at a time.”',n+' practiced every day for a week.','At last, '+he+' could '+sk+', and '+he+' cheered!'],
   extra:n+' was determined to get it right.',
   ev:[n+' wanted to '+sk,n+' kept failing',n+' felt like giving up',adv+' gave advice',n+' practiced every day'],
-  d:[['What did '+n+' want to do?',sk,pickN(sks,2,[sk])],['Who gave '+n+' advice?',adv,pickN(advs,2,[adv])],['How long did '+n+' practice?','every day for a week',['one hour','a whole year']]],
+  d:[['What did '+n+' want to do?',sk,pickN(sks,3,[sk])],['Who gave '+n+' advice?',adv,pickN(advs,3,[adv])],['How long did '+n+' practice?','every day for a week',['one hour','a whole year','a few minutes']]],
   feel:['How did '+n+' feel when it did not work?','discouraged',['excited','sleepy']],feel2:['How did '+n+' feel at the end?','proud',['worried','bored']],
   pred:['What will '+n+' probably do next?','keep practicing and try something new',['quit trying everything','forget how to '+sk]],
   main:['Practice and good advice help someone learn a hard thing.',['A child buys a new bike.','A child loses a race.']],theme:'Practice helps you get better at hard things.',
@@ -689,7 +719,7 @@ function scen(){
   sc={title:'The Rainy Picnic',lines:[n+' and '+his+' family planned a picnic at '+pl2+'.','But dark clouds rolled in, and rain began to fall.','Everyone grabbed the food and ran to the car.',n+' had an idea: they could have the picnic inside.','They spread a blanket on the living room floor and ate sandwiches while rain tapped the window.',n+' said it was the best picnic ever.'],
   extra:'Rather than feeling gloomy, '+n+' stayed positive.',
   ev:[n+' and '+his+' family planned a picnic','rain began to fall','everyone ran to the car',n+' had an idea','they ate sandwiches inside'],
-  d:[['Where did the family plan the picnic?',pl2,pickN(pls2,2,[pl2])],['What spoiled the plan?','rain',['wind','a lost basket']],['Where did they eat in the end?','on the living room floor',['at the beach','in the car']]],
+  d:[['Where did the family plan the picnic?',pl2,pickN(pls2,3,[pl2])],['What spoiled the plan?','rain',['wind','a lost basket','a flat tire']],['Where did they eat in the end?','on the living room floor',['at the beach','in the car','in the backyard']]],
   feel:['How did '+n+' feel at the end?','happy',['upset','scared']],feel2:['How did the family feel when the rain started?','surprised and disappointed',['proud','sleepy']],
   pred:['What will the family probably do on the next sunny day?','try the picnic outside again',['never eat sandwiches','stay in the car']],
   main:['A family makes the best of a rainy day.',['A family moves to a new house.','A family buys a car.']],theme:'A good attitude can turn a bad day around.',
@@ -700,7 +730,7 @@ function scen(){
   sc={title:'A Cry for Help',lines:['One morning, '+n+' heard a small cry outside.','It was a '+an+' stuck in '+sp+'.',n+' tried to pull it out, but '+he+' was not strong enough.',hn+' came to help, and together they lifted it free.','They gave it water and called the animal doctor.','The '+an+' was safe, and '+n+' felt proud.'],
   extra:'It was a daring rescue.',
   ev:[n+' heard a cry',n+' saw the '+an+' stuck',n+' tried to pull it out',hn+' came to help','they called the animal doctor'],
-  d:[['What was stuck?',an,pickN(ans,2,[an])],['Why could '+n+' not free it alone?','not strong enough',['too scared','too sleepy']],['What did they give the '+an+'?','water',['a toy','a haircut']]],
+  d:[['What was stuck?',an,pickN(ans,3,[an])],['Why could '+n+' not free it alone?','not strong enough',['too scared','too sleepy','too busy']],['What did they give the '+an+'?','water',['a toy','a haircut','a hat']]],
   feel:['How did '+n+' feel at the end?','proud',['bored','angry']],feel2:['How did '+n+' feel when '+he+' heard the cry?','concerned',['sleepy','silly']],
   pred:['What will the animal doctor probably do?','check that the '+an+' is healthy',['paint the fence','take the '+an+' to school']],
   main:['Two friends work together to rescue an animal.',['A child learns to read.','A family goes camping.']],theme:'Working together can solve big problems.',
@@ -711,7 +741,7 @@ function scen(){
   sc={title:'Stage Fright',lines:[n+' had to '+act+' in the school show.',n+'’s hands shook, and '+his+' heart pounded.',hn+', a friend, whispered, “You can do it.”',n+' took a deep breath and walked on stage.','The first part felt shaky, but soon '+he+' felt calm.','Everyone clapped, and '+n+' bowed with a big smile.'],
   extra:n+' felt anxious about the big crowd.',
   ev:[n+' had to '+act,n+' felt nervous',hn+' whispered encouragement',n+' walked on stage',n+' felt calm'],
-  d:[['What did '+n+' have to do?',act,pickN(acts,2,[act])],['Who encouraged '+n+'?',hn,pickN(HN,2,[hn])],['What did '+n+' do before walking on stage?','took a deep breath',['ran away','sat down']]],
+  d:[['What did '+n+' have to do?',act,pickN(acts,3,[act])],['Who encouraged '+n+'?',hn,pickN(HN,3,[hn])],['What did '+n+' do before walking on stage?','took a deep breath',['ran away','sat down','went to sleep']]],
   feel:['How did '+n+' feel before the show?','nervous',['bored','angry']],feel2:['How did '+n+' feel at the end?','proud and relieved',['sad','confused']],
   pred:['How will '+n+' probably feel about the next show?','braver',['more afraid','uninterested']],
   main:['A nervous child faces a fear and succeeds.',['A child forgets a costume.','A teacher plans a show.']],theme:'Facing your fear can make you stronger.',
@@ -722,7 +752,7 @@ function scen(){
   sc={title:'Taking Turns',lines:[n+' and '+hn+' both wanted the last '+ob+' at recess.','They argued, and neither one would give in.','A teacher suggested they take turns.',n+' went first while '+hn+' counted to fifty.','Then they switched, and '+hn+' got a turn.','Soon they were laughing together again.'],
   extra:'In the end, they found a fair compromise.',
   ev:[n+' and '+hn+' wanted the same '+ob,'they argued','a teacher suggested turns',n+' went first',hn+' got a turn'],
-  d:[['What did both kids want?','the last '+ob,pickN(obs,2,[ob]).map(function(x){return 'the last '+x;})],['Who suggested taking turns?','a teacher',[n,'a parent']],['What did '+hn+' do during '+n+'’s turn?','counted to fifty',['went home','ate lunch']]],
+  d:[['What did both kids want?','the last '+ob,pickN(obs,3,[ob]).map(function(x){return 'the last '+x;})],['Who suggested taking turns?','a teacher',[n,'a parent','the principal']],['What did '+hn+' do during '+n+'’s turn?','counted to fifty',['went home','ate lunch','played alone']]],
   feel:['How did the kids feel when they argued?','upset',['sleepy','proud']],feel2:['How did the kids feel at the end?','friendly and happy',['angry','lonely']],
   pred:['What will the kids probably do next time they want the same thing?','take turns again',['argue longer','stop being friends']],
   main:['Two friends solve an argument by taking turns.',['A teacher loses a ball.','A class goes on a trip.']],theme:'Fair compromises solve arguments.',
@@ -735,7 +765,8 @@ function passage(title,lines,fs){return "<div class='pas' style='font-size:"+fs+
 function finish(cands,kinds,sat,pas,title,keyBase,extraPool){
  var pool=cands.filter(function(c){return kinds.indexOf(c.k)>-1;});if(!pool.length)pool=cands;
  var c=pick(pool),w=c.w.slice();
- if(sat&&c.k!=='s'&&c.k!=='e'&&extraPool){var ex=shuf(extraPool).filter(function(v){return v!==c.c&&w.indexOf(v)<0;});if(ex.length)w.push(ex[0]);}
+ var POS=/happy|proud|thankful|friendly|relieved|braver|glad|excited|good|calm/i,GEN={i:POS.test(c.c)?['angry','bored','scared','lonely','upset','sad']:['proud','excited','silly','calm','sleepy'],m:['A family goes on a long trip.','A child learns to read.','A teacher plans a lesson.','A dog finds a big bone.'],p:['They will forget everything that happened.','Nothing will change at all.','They will stop being friends.','They will give up for good.'],v:['quiet and shy','full and happy','strong and fast','cold and wet']},g5=0;
+ while(w.length<3&&g5++<12){var tp=GEN[c.k]||extraPool||[];tp=shuf(tp).filter(function(v){return v!==c.c&&w.indexOf(v)<0;});if(!tp.length)break;w.push(tp[0]);}
  var hows={d:'The answer is in the story. Go back and find the sentence that tells it.',s:RTIP.s,p:RTIP.p,i:'Look at what happens and how the character acts to figure out feelings.',m:'A summary or lesson tells the big idea, not tiny details.',v:'Use the words around the unknown word to figure out its meaning.',e:RTIP.e};
  return{prompt:(sat?'🏅 ':'')+c.p,say:sat?'Challenge question! Check every choice against the story.':(RSAY[c.k]||'Read the story, then pick the best answer.'),vis:pas,ans:c.c,opts:shuf([c.c].concat(w)),list:1,lbl:sat?1:0,noauto:GR>=3?1:0,txt:title+': '+c.p,key:keyBase+'|'+c.p,speak:'',how:hows[c.k]+(c.k==='e'?' The best proof is: '+c.c:''),viz:''};
 }
@@ -743,12 +774,12 @@ function gGenStory(){
  var sc=scen(),lines=sc.lines.slice(),ev=sc.ev,n=sc.n;if(GR>=3)lines.splice(2,0,sc.extra);
  var kinds=LV===1?'ds':LV===2?'dsp':LV===3?'dsvp':LV===4?'dsvpim':'vpime',sat=LV>=4&&GR>=2,cands=[];
  sc.d.forEach(function(d){cands.push({k:'d',p:d[0],c:d[1],w:d[2]});});
- if(GR<=1){cands.push({k:'s',p:'What happened first in the story?',c:ev[0],w:[ev[3],ev[4]]},{k:'s',p:'What happened last in the story?',c:ev[4],w:[ev[0],ev[1]]});}
- else for(var i=0;i<4;i++)cands.push({k:'s',p:'What happened right after '+ev[i]+'?',c:ev[i+1],w:pickN(ev,2,[ev[i],ev[i+1]])});
+ if(GR<=1){cands.push({k:'s',p:'What happened first in the story?',c:ev[0],w:[ev[3],ev[4],ev[2]]},{k:'s',p:'What happened last in the story?',c:ev[4],w:[ev[0],ev[1],ev[2]]});}
+ else for(var i=0;i<4;i++)cands.push({k:'s',p:'What happened right after '+ev[i]+'?',c:ev[i+1],w:pickN(ev,3,[ev[i],ev[i+1]])});
  cands.push({k:'p',p:sc.pred[0],c:sc.pred[1],w:sc.pred[2]},{k:'i',p:sc.feel[0],c:sc.feel[1],w:sc.feel[2]},{k:'i',p:sc.feel2[0],c:sc.feel2[1],w:sc.feel2[2]});
  cands.push({k:'m',p:GR<=1?'What is this story mostly about?':'What is the best summary of the story?',c:sc.main[0],w:sc.main[1]});
- if(GR>=3){cands.push({k:'v',p:'What does “'+sc.vocab[0]+'” mean in the story?',c:sc.vocab[1],w:sc.vocab[2]},{k:'m',p:'Which lesson does the story teach?',c:sc.theme,w:pickN(THEMEW,2)});}
- if(GR>=2){var ci=sc.claim[1];cands.push({k:'e',p:'Which sentence best supports the idea that '+sc.claim[0]+'?',c:sc.lines[ci],w:pickN(sc.lines,sat?3:2,[sc.lines[ci]])});}
+ if(GR>=3){cands.push({k:'v',p:'What does “'+sc.vocab[0]+'” mean in the story?',c:sc.vocab[1],w:sc.vocab[2]},{k:'m',p:'Which lesson does the story teach?',c:sc.theme,w:pickN(THEMEW,3)});}
+ if(GR>=2){var ci=sc.claim[1];cands.push({k:'e',p:'Which sentence best supports the idea that '+sc.claim[0]+'?',c:sc.lines[ci],w:pickN(sc.lines,3,[sc.lines[ci]])});}
  var q=finish(cands,kinds,sat,passage(sc.title,lines,GR<=1?'1.35rem':'1.1rem'),sc.title,lines[0],[sc.pred[1],sc.main[0],sc.feel2[1],sc.theme]);
  q.speak=lines.join(' ')+' '+q.prompt.replace('🏅 ','');return q;
 }
@@ -767,7 +798,7 @@ var AN=[['penguin','near the icy South Pole','fish and tiny sea animals','thick 
 function gAnimal(){
  var a=pick(AN),nm=a[0],lines=['The '+nm+' lives '+a[1]+'.','It eats '+a[2]+'.','It has '+a[3]+' to help it '+a[4]+'.','It '+a[5]+'.','A baby '+nm+' is called '+a[6]+'.','Did you know? '+a[7]],
  use=GR===0?[0,1,3]:GR===1?[0,1,2,3]:GR<=3?[0,1,2,3,4]:[0,1,2,3,4,5],txt=use.map(function(i){return lines[i];}),
- sat=LV>=4&&GR>=2,kinds=LV===1?'ds':LV===2?'dsp':LV===3?'dsvp':LV===4?'dsvpim':'vpime',cands=[],cnt=sat?3:2;
+ sat=LV>=4&&GR>=2,kinds=LV===1?'ds':LV===2?'dsp':LV===3?'dsvp':LV===4?'dsvpim':'vpime',cands=[],cnt=3;
  function oth(f){var seen={};return shuf(AN.map(function(x){return x[f];})).filter(function(v){if(v===a[f]||seen[v])return false;seen[v]=1;return true;});}
  cands.push({k:'d',p:'Where does the '+nm+' live?',c:a[1],w:oth(1).slice(0,cnt)},{k:'d',p:'What does the '+nm+' eat?',c:a[2],w:oth(2).slice(0,cnt)});
  cands.push({k:'d',p:'How does the '+nm+' move?',c:'It '+a[5]+'.',w:oth(5).slice(0,cnt).map(function(v){return 'It '+v+'.';})});
@@ -790,59 +821,59 @@ function gStoryB(){
   var kk=GR<=2?3:4,idx=shuf([0,1,3,4,5]).slice(0,kk).sort(function(a,b){return a-b;}),arr,tries=0;
   do{arr=shuf(idx);tries++;}while(arr.join()===idx.join()&&tries<20);
   var labels=idx.map(function(i){return arr.indexOf(i)+1;}),ans=labels.join(', '),ws={},wl=[];ws[ans]=1;
-  var g=0;while(wl.length<2&&g++<60){var p=shuf(labels.slice()).join(', ');if(!ws[p]){ws[p]=1;wl.push(p);}}
+  var g=0;while(wl.length<3&&g++<80){var p=shuf(labels.slice()).join(', ');if(!ws[p]){ws[p]=1;wl.push(p);}}
   var ord=['First','Next','Then','Last'].slice(kk===3?0:0);var nums=kk===3?['First','Next','Last']:['First','Next','Then','Last'];
   q={prompt:'Put the story in order. Which choice is right?',say:'Think: what happens first, next, and last?',vis:"<div class='pas' style='font-size:"+(GR<=1?'1.25rem':'1.05rem')+"'>"+arr.map(function(i,j){return '<p><b>'+(j+1)+'.</b> '+L[i]+'</p>';}).join('')+'</div>',ans:ans,opts:shuf([ans].concat(wl)),list:0,noauto:0,txt:sc.title+': put in order',key:L[0]+'|order|'+arr.join(''),speak:'Put the story in order. '+arr.map(function(i,j){return 'Number '+(j+1)+'. '+L[i];}).join(' '),
    how:'Look for what happens first, next, and last. The right order is '+ans+'. The story goes: '+idx.map(function(i,j){return nums[j]+', '+L[i];}).join(' '),viz:''};
  }else if(t==='part'){
-  var P=pick([['BEGINS',0,[3,5]],['ENDS',5,[0,2]],['tells the PROBLEM',1,[0,5]],['tells the SOLUTION',4,[2,0]]]);
-  q={prompt:'Which sentence '+P[0]+'?',say:'Read the whole story first.',vis:story(L),ans:L[P[1]],opts:shuf([L[P[1]],L[P[2][0]],L[P[2][1]]]),list:1,noauto:GR>=3?1:0,txt:sc.title+': '+P[0],key:L[0]+'|part|'+P[0],speak:L.join(' ')+' Which sentence '+P[0].toLowerCase()+'?',
+  var P=pick([['BEGINS',0,[3,5,4]],['ENDS',5,[0,2,1]],['tells the PROBLEM',1,[0,5,3]],['tells the SOLUTION',4,[2,0,5]]]);
+  q={prompt:'Which sentence '+P[0]+'?',say:'Read the whole story first.',vis:story(L),ans:L[P[1]],opts:shuf([L[P[1]],L[P[2][0]],L[P[2][1]],L[P[2][2]]]),list:1,noauto:GR>=3?1:0,txt:sc.title+': '+P[0],key:L[0]+'|part|'+P[0],speak:L.join(' ')+' Which sentence '+P[0].toLowerCase()+'?',
    how:'The beginning introduces the characters and setting. The problem is what goes wrong. The solution is how it gets fixed. The ending tells how it all turns out.',viz:''};
  }else if(t==='who'){
   var useP=sc.place&&Math.random()<.5;
-  if(useP)q={prompt:'Where does the story happen?',ans:sc.place,opts:shuf([sc.place].concat(pickN(sc.places,2,[sc.place]))),how:'The setting is where and when the story happens. Look at the first sentence.'};
-  else q={prompt:'Who is the main character?',ans:sc.n,opts:shuf([sc.n,sc.hn,pick(NM.map(function(x){return x[0];}).filter(function(x){return x!==sc.n&&x!==sc.hn;}))]),how:'The main character is the person the story is mostly about. Here, it is '+sc.n+'.'};
+  if(useP)q={prompt:'Where does the story happen?',ans:sc.place,opts:shuf([sc.place].concat(pickN(sc.places,3,[sc.place]))),how:'The setting is where and when the story happens. Look at the first sentence.'};
+  else q={prompt:'Who is the main character?',ans:sc.n,opts:shuf([sc.n,sc.hn].concat(pickN(NM.map(function(x){return x[0];}).filter(function(x){return x!==sc.n&&x!==sc.hn;}),2))),how:'The main character is the person the story is mostly about. Here, it is '+sc.n+'.'};
   q.say='Read the story, then answer.';q.vis=story(L);q.list=0;q.noauto=0;q.txt=sc.title+': '+q.prompt;q.key=L[0]+'|who|'+q.prompt;q.speak=L.join(' ')+' '+q.prompt;q.viz='';
  }else if(t==='ending'){
-  q={prompt:'Which ending fits the story best?',say:'Think about what makes sense.',vis:story(L.slice(0,5)),ans:sc.end[0],opts:shuf([sc.end[0]].concat(sc.end[1])),list:1,noauto:GR>=3?1:0,txt:sc.title+': best ending',key:L[0]+'|ending',speak:L.slice(0,5).join(' ')+' Which ending fits the story best?',
+  q={prompt:'Which ending fits the story best?',say:'Think about what makes sense.',vis:story(L.slice(0,5)),ans:sc.end[0],opts:shuf([sc.end[0]].concat(sc.end[1],[pick(['Everyone forgot about the whole day.','The story started all over again.','Nothing else ever happened.'])])),list:1,noauto:GR>=3?1:0,txt:sc.title+': best ending',key:L[0]+'|ending',speak:L.slice(0,5).join(' ')+' Which ending fits the story best?',
    how:'A good ending matches what happened in the story and solves or wraps up the problem.',viz:''};
  }else{
-  q={prompt:'Which lesson does this story teach?',say:'Think about the big idea.',vis:story(L),ans:sc.theme,opts:shuf([sc.theme].concat(pickN(THEMEW,2))),list:1,noauto:1,txt:sc.title+': lesson',key:L[0]+'|theme',speak:'',
+  q={prompt:'Which lesson does this story teach?',say:'Think about the big idea.',vis:story(L),ans:sc.theme,opts:shuf([sc.theme].concat(pickN(THEMEW,3))),list:1,noauto:1,txt:sc.title+': lesson',key:L[0]+'|theme',speak:'',
    how:'A lesson (theme) is the big idea the story teaches. Ask: what did the character learn?',viz:''};
  }
  q.lbl=0;return q;
 }
-function mk(prompt,vis,ans,wr,how,txt,short){return{prompt:prompt,say:'Read each choice carefully.',vis:vis?"<div class='pas' style='font-size:1.35rem;text-align:center'>"+vis+'</div>':'',ans:ans,opts:shuf([ans].concat(wr.slice(0,2))),list:short?0:1,noauto:0,txt:txt,speak:prompt+' '+(vis||'').replace(/___/g,'blank'),how:how,viz:''};}
+function mk(prompt,vis,ans,wr,how,txt,short){return{prompt:prompt,say:'Read each choice carefully.',vis:vis?"<div class='pas' style='font-size:1.35rem;text-align:center'>"+vis+'</div>':'',ans:ans,opts:shuf([ans].concat(wr.slice(0,3))),list:short?0:1,noauto:0,txt:txt,speak:prompt+' '+(vis||'').replace(/___/g,'blank'),how:how,viz:''};}
 function fCap(){
  if(GR>=1&&Math.random()<.5){var s=pick(['Where is my hat','Can we go outside','Do you like apples','What is your name','How old are you','Is it time for lunch','Can I have a snack','Is it raining','Where are you going']);
-  return mk('Which sentence is written correctly?','',s+'?',[s.charAt(0).toLowerCase()+s.slice(1)+'?',s+'.'],'A sentence begins with a capital letter. An asking sentence ends with a question mark.','Written correctly: '+s);}
+  return mk('Which sentence is written correctly?','',s+'?',[s.charAt(0).toLowerCase()+s.slice(1)+'?',s+'.',s.charAt(0).toLowerCase()+s.slice(1)+'.'],'A sentence begins with a capital letter. An asking sentence ends with a question mark.','Written correctly: '+s);}
  var s2=pick(['The dog','A cat','My friend','The girl','Our teacher','The bird','The frog','My mom','A fish','The boy'])+' '+pick(['runs fast','jumps high','likes to play','eats lunch','sings a song','sleeps all day','plays outside','reads a book','drinks water','hops away']);
- return mk('Which sentence is written correctly?','',s2+'.',[s2.charAt(0).toLowerCase()+s2.slice(1)+'.',s2],'A sentence begins with a capital letter and a telling sentence ends with a period.','Written correctly: '+s2);
+ return mk('Which sentence is written correctly?','',s2+'.',[s2.charAt(0).toLowerCase()+s2.slice(1)+'.',s2,s2.charAt(0).toLowerCase()+s2.slice(1)],'A sentence begins with a capital letter and a telling sentence ends with a period.','Written correctly: '+s2);
 }
 function fOrder(){
  var S=['The cat sat on the mat.','I like to read books.','We play in the park.','The sun is hot.','My mom made a cake.','My dog can run fast.','Birds fly in the sky.','She rides a red bike.','The fish swim in the pond.','Dad drives the car.','I see a big tree.','The baby is sleeping.','We eat lunch at noon.','The bird sits on a branch.'],s=pick(S),w=s.slice(0,-1).split(' ').map(function(x,i){return i===0&&x!=='I'?x.toLowerCase():x;});
  function scr(){var a,t=0;do{a=cap1(shuf(w).join(' '))+'.';t++;}while(a===s&&t<30);return a;}
- var w1=scr(),w2=scr(),g=0;while(w2===w1&&g++<30)w2=scr();
- return mk('Which sentence has the words in the right order?','',s,[w1,w2],'Read each choice out loud. The right sentence makes sense: “'+s+'”','Word order: '+s);
+ var w1=scr(),w2=scr(),g=0;while(w2===w1&&g++<30)w2=scr();var w3=scr();g=0;while((w3===w1||w3===w2)&&g++<30)w3=scr();
+ return mk('Which sentence has the words in the right order?','',s,[w1,w2,w3],'Read each choice out loud. The right sentence makes sense: “'+s+'”','Word order: '+s);
 }
 function fWordKind(){
  var A=['run','jump','eat','sing','swim','read','kick','dance','hop','walk','clap','throw'],N=['table','dog','tree','ball','hat','book','house','cup','chair','bird','car','shoe'],J=['red','big','soft','tiny','shiny','green','small','warm','loud'],t=pick(['action','thing','describe']);
- if(t==='action')return mk('Which word is an action word?','',pick(A),[pick(N),pick(J)],'An action word (verb) tells what someone does, like run or jump.','Action word',1);
- if(t==='thing')return mk('Which word names a person, place, or thing?','',pick(N),[pick(A),pick(J)],'A naming word (noun) names a person, place, or thing, like dog or table.','Naming word',1);
- return mk('Which word describes something?','',pick(J),[pick(A),pick(N)],'A describing word (adjective) tells more about a noun, like red or big.','Describing word',1);
+ if(t==='action')return mk('Which word is an action word?','',pick(A),pickN(N.concat(J),3),'An action word (verb) tells what someone does, like run or jump.','Action word',1);
+ if(t==='thing')return mk('Which word names a person, place, or thing?','',pick(N),pickN(A.concat(J),3),'A naming word (noun) names a person, place, or thing, like dog or table.','Naming word',1);
+ return mk('Which word describes something?','',pick(J),pickN(A.concat(N),3),'A describing word (adjective) tells more about a noun, like red or big.','Describing word',1);
 }
-var STY={statement:['The bus is yellow.','Birds build nests in spring.','My brother plays the guitar.','It is sunny today.','We walked to school.','The moon is bright.','She has a red hat.','Dogs like to play.'],question:['Where is my backpack?','Can you help me?','What time is lunch?','Do you like pizza?','Who is at the door?','Is it your turn?','How are you?','Where do you live?'],command:['Please close the door.','Wash your hands.','Look at the sky.','Put your toys away.','Open your book to page ten.','Sit down, please.','Pick up your pencil.','Listen to the story.'],exclamation:['What a beautiful rainbow!','I won the race!','Watch out!','That is amazing!','We did it!','I love this song!','That was so fun!','Look at that!']};
+var STY={statement:['The bus is yellow.','Birds build nests in spring.','My brother plays the guitar.','It is sunny today.','We walked to school.','The moon is bright.','She has a red hat.','Dogs like to play.'],question:['Where is my backpack?','Can you help me?','What time is lunch?','Do you like pizza?','Who is at the door?','Is it your turn?','How are you?','Where do you live?'],command:['Please close the door.','Wash your hands.','Look at the sky.','Put your toys away.','Open your book to page ten.','Sit down, please.','Pick up your pencil.','Listen to the story.'],exclamation:['What a beautiful rainbow!','I won the race!','That is amazing!','We did it!','I love this song!','That was so fun!']};
 function fType(){
  var ks=GR<=1?['statement','question','exclamation']:['statement','question','command','exclamation'],k=pick(ks),s=pick(STY[k]),lab={statement:'a telling sentence',question:'an asking sentence',command:'a command',exclamation:'an exclamation'};
- return mk('What kind of sentence is this?',s,lab[k],pickN(ks,2,[k]).map(function(x){return lab[x];}),'A telling sentence tells something and ends with a period. An asking sentence asks and ends with a question mark. A command tells someone to do something. An exclamation shows strong feeling. This one is '+lab[k]+'.','Sentence type: '+s);
+ return mk('What kind of sentence is this?',s,lab[k],pickN(['statement','question','command','exclamation'],3,[k]).map(function(x){return lab[x];}),'A telling sentence tells something and ends with a period. An asking sentence asks and ends with a question mark. A command tells someone to do something. An exclamation shows strong feeling. This one is '+lab[k]+'.','Sentence type: '+s);
 }
 function fPos(){
  var adj=pick(['big','tiny','happy','brave','shiny']),noun=pick(['puppy','bird','girl','robot','dragon']),verb=pick(['jumps','runs','sings','swims','dances']),adv=pick(['quickly','loudly','happily','slowly']),s,ask,parts;
- if(GR===1){s='The '+noun+' '+verb+'.';ask=pick([['noun',noun],['verb',verb]]);parts=[noun,verb,'the'];}
- else if(GR===2){s='The '+adj+' '+noun+' '+verb+'.';ask=pick([['noun',noun],['verb',verb],['adjective',adj]]);parts=[noun,verb,adj];}
- else{s='The '+adj+' '+noun+' '+verb+' '+adv+'.';ask=pick([['noun',noun],['verb',verb],['adjective',adj],['adverb',adv]]);parts=[noun,verb,adj,adv];}
+ if(GR===1){s='The '+adj+' '+noun+' '+verb+'.';ask=pick([['noun',noun],['verb',verb]]);parts=[noun,verb,adj,'the'];}
+ else if(GR===2){s='The '+adj+' '+noun+' '+verb+'.';ask=pick([['noun',noun],['verb',verb],['adjective',adj]]);parts=[noun,verb,adj,'the'];}
+ else{s='The '+adj+' '+noun+' '+verb+' '+adv+'.';ask=pick([['noun',noun],['verb',verb],['adjective',adj],['adverb',adv]]);parts=[noun,verb,adj,adv,'the'];}
  var D={noun:'A noun names a person, place, or thing.',verb:'A verb shows action.',adjective:'An adjective describes a noun.',adverb:'An adverb tells how, when, or where an action happens. Many end in -ly.'};
- return mk('Which word is the '+ask[0]+'?',s,ask[1],pickN(parts,2,[ask[1]]),D[ask[0]]+' In this sentence, “'+ask[1]+'” is the '+ask[0]+'.','Find the '+ask[0]+' in: '+s,1);
+ return mk('Which word is the '+ask[0]+'?',s,ask[1],pickN(parts,3,[ask[1]]),D[ask[0]]+' In this sentence, “'+ask[1]+'” is the '+ask[0]+'.','Find the '+ask[0]+' in: '+s,1);
 }
 function fPlural(){
  var P=[['cat','cats'],['dog','dogs'],['box','boxes'],['bus','buses'],['dish','dishes'],['baby','babies'],['puppy','puppies'],['leaf','leaves'],['child','children'],['mouse','mice'],['foot','feet'],['man','men'],['tooth','teeth'],['goose','geese'],['wolf','wolves']],r=pick(GR===1?P.slice(0,8):P);
@@ -852,56 +883,57 @@ function fPlural(){
 var TN=[['Yesterday, we ___ to the park.','went','goed','gone'],['Last night, she ___ all her dinner.','ate','eated','eaten'],['This morning, he ___ a fast race.','ran','runned','run'],['Yesterday, I ___ a rainbow.','saw','seed','seen'],['Last summer, they ___ in the lake.','swam','swimmed','swum'],['Yesterday, Mom ___ me a hug.','gave','gived','given'],['Last week, we ___ a long trip.','took','taked','taken'],['Last night, she ___ a letter.','wrote','writed','written'],['Last night, the choir ___ a song.','sang','singed','sung'],['Yesterday, he ___ a picture.','drew','drawed','drawn'],['Last year, the birds ___ south early.','flew','flyed','flown'],['Yesterday, I ___ my lunch.','brought','bringed','brang'],['Last week, he ___ a big fish.','caught','catched','cought'],['Yesterday, we ___ fresh bread.','bought','buyed','boughten']];
 var TP=[['We have ___ all the cookies.','eaten','ate','eated'],['I have ___ that movie before.','seen','saw','seed'],['He has ___ three stories.','written','wrote','writed'],['They have ___ the bus today.','taken','took','taked'],['She has ___ away her old toys.','given','gave','gived'],['We have ___ that song before.','sung','sang','singed'],['He has ___ a map.','drawn','drew','drawed'],['The birds have ___ south.','flown','flew','flyed']];
 function fTense(){
- var pf=GR>=4&&Math.random()<.5,r=pf?pick(TP):pick(GR<=2?TN.slice(0,8):TN);
- return mk('Pick the correct verb.',r[0],r[1],[r[2],r[3]],pf?'Use has or have with the past participle. Here, “'+r[1]+'” fits.':'Some verbs change in special ways in the past tense. We say “'+r[1]+'”, not “'+r[2]+'”.','Verb: '+r[0],1);
+ var TNB=['go','eat','running','see','swim','give','take','write','sing','draw','fly','bring','catch','buy'],TPB=['eat','see','write','take','give','sing','draw','fly'],pf=GR>=4&&Math.random()<.5,ar=pf?TP:(GR<=2?TN.slice(0,8):TN),ix=rnd(0,ar.length-1),r=ar[ix],bs=(pf?TPB:TNB)[ix];
+ return mk('Pick the correct verb.',r[0],r[1],[r[2],r[3],bs],pf?'Use has or have with the past participle. Here, “'+r[1]+'” fits.':'Some verbs change in special ways in the past tense. We say “'+r[1]+'”, not “'+r[2]+'”.','Verb: '+r[0],1);
 }
 function fFrag(){
  if(GR>=4&&Math.random()<.6){var p=pick([['The boy kicked the ball','he ran fast'],['I opened the door','the cat ran out'],['Mia finished her homework','she went outside'],['We packed lunch','the bus came']]);
-  return mk('Which choice fixes the run-on sentence?',p[0]+' '+p[1]+'.',p[0]+', and '+p[1]+'.',[p[0]+', '+p[1]+'.',p[0]+'. '+p[1]+'.'],'A run-on joins two complete sentences with no joining word. Fix it with a comma and a joining word (and, but, so), or split it into two sentences. A comma alone is a comma splice, and a new sentence must start with a capital letter.','Fix the run-on: '+p[0]+' '+p[1]);}
+  return mk('Which choice fixes the run-on sentence?',p[0]+' '+p[1]+'.',p[0]+', and '+p[1]+'.',[p[0]+', '+p[1]+'.',p[0]+'. '+p[1]+'.',p[0]+' '+p[1]+'.'],'A run-on joins two complete sentences with no joining word. Fix it with a comma and a joining word (and, but, so), or split it into two sentences. A comma alone is a comma splice, and a new sentence must start with a capital letter.','Fix the run-on: '+p[0]+' '+p[1]);}
  var s=pick(['The boy','My dog','The bird','Our teacher','The class']),v=pick(['kicked the ball','jumped over the fence','sang a song','made dinner','went outside']),t=pick(['at the park','in the red hat','with the ball']);
- return mk('Which one is a complete sentence?','',s+' '+v+'.',[cap1(v)+'.',s+' '+t+'.'],'A complete sentence has a subject (who or what) and a verb (what happens). “'+cap1(v)+'.” has no subject. “'+s+' '+t+'.” has no verb.','Complete sentence: '+s+' '+v);
+ return mk('Which one is a complete sentence?','',s+' '+v+'.',[cap1(v)+'.',s+' '+t+'.',s+'.'],'A complete sentence has a subject (who or what) and a verb (what happens). “'+cap1(v)+'.” has no subject. “'+s+' '+t+'.” has no verb.','Complete sentence: '+s+' '+v);
 }
 var CT=[['do not','don’t'],['is not','isn’t'],['we are','we’re'],['I am','I’m'],['she is','she’s'],['they are','they’re'],['it is','it’s'],['will not','won’t'],['did not','didn’t'],['I will','I’ll'],['you are','you’re'],['would not','wouldn’t']];
 function fApos(){
  if(GR>=3&&Math.random()<.5){
   var pl=GR>=4&&Math.random()<.5,o=pick(pl?['girl','boy','dog','teacher','bird']:['girl','boy','dog','teacher','baby','bird']),th=pick(['hat','ball','bone','book']);
   var c=pl?'the '+o+'s’ '+th+'s':'the '+o+'’s '+th,w1=pl?'the '+o+'’s '+th+'s':'the '+o+'s '+th,w2=pl?'the '+o+'s '+th+'s':'the '+o+'s’ '+th;
-  return mk(pl?'Which phrase shows the '+th+'s belong to two '+o+'s?':'Which phrase shows the '+th+' belongs to one '+o+'?','',c,[w1,w2],'Add ’s to show one owner. For more than one owner that ends in s, add just an apostrophe after the s.','Possessive: '+(pl?'two '+o+'s':'one '+o));
+  return mk(pl?'Which phrase shows the '+th+'s belong to two '+o+'s?':'Which phrase shows the '+th+' belongs to one '+o+'?','',c,[w1,w2,pl?'the '+o+'s’s '+th+'s':'the '+o+'s’s '+th],'Add ’s to show one owner. For more than one owner that ends in s, add just an apostrophe after the s.','Possessive: '+(pl?'two '+o+'s':'one '+o));
  }
  var r=pick(CT),c=r[1],i=c.indexOf('’');
- return mk('Which is the contraction for “'+r[0]+'”?','',c,[c.replace('’',''),c.slice(0,i-1)+'’'+c.charAt(i-1)+c.slice(i+1)],'A contraction squeezes two words into one. The apostrophe takes the place of the missing letters: '+r[0]+' becomes '+c+'.','Contraction of '+r[0],1);
+ return mk('Which is the contraction for “'+r[0]+'”?','',c,[c.replace('’',''),c.slice(0,i-1)+'’'+c.charAt(i-1)+c.slice(i+1),c.replace('’','')+'’'],'A contraction squeezes two words into one. The apostrophe takes the place of the missing letters: '+r[0]+' becomes '+c+'.','Contraction of '+r[0],1);
 }
 function fComma(){
  var t=GR===2?'list':pick(GR>=5?['list','intro','address']:['list','intro']);
  if(t==='list'){var foods=['apples','bananas','grapes','carrots','bread','cheese'],things=['a hat','a map','a snack','a book','a flashlight','a jacket'],f=pick([['We bought ',foods],['Mia packed ',things],['Dad needs ',things]]),it=pickN(f[1],3);
-  return mk('Which sentence uses commas correctly?','',f[0]+it[0]+', '+it[1]+', and '+it[2]+'.',[f[0]+it[0]+' '+it[1]+' and '+it[2]+'.',f[0].trim()+', '+it[0]+', '+it[1]+' and, '+it[2]+'.'],'Use commas to separate three or more items in a list.','Commas in a list: '+it.join(', '));}
+  return mk('Which sentence uses commas correctly?','',f[0]+it[0]+', '+it[1]+', and '+it[2]+'.',[f[0]+it[0]+' '+it[1]+' and '+it[2]+'.',f[0].trim()+', '+it[0]+', '+it[1]+' and, '+it[2]+'.',f[0]+it[0]+' '+it[1]+', and '+it[2]+'.'],'Use commas to separate three or more items in a list.','Commas in a list: '+it.join(', '));}
  if(t==='intro'){var op=pick(['First','Next','Finally','However','Suddenly','Meanwhile']),cl=pick([['we','packed the car.'],['she','opened the box.'],['he','grabbed his coat.'],['they','locked the door.']]);
-  return mk('Which sentence uses commas correctly?','',op+', '+cl[0]+' '+cl[1],[op+' '+cl[0]+', '+cl[1],op+' '+cl[0]+' '+cl[1]],'Put a comma after a starting word like First, Next, or However.','Comma after '+op+': '+cl[0]+' '+cl[1]);}
+  return mk('Which sentence uses commas correctly?','',op+', '+cl[0]+' '+cl[1],[op+' '+cl[0]+', '+cl[1],op+' '+cl[0]+' '+cl[1],op+', '+cl[0]+', '+cl[1]],'Put a comma after a starting word like First, Next, or However.','Comma after '+op+': '+cl[0]+' '+cl[1]);}
  var nm=pick(['Maya','Dad','Mr. Lee','Ben']),r=pick([['please','close the door.'],['can','you help me?'],['look','at this picture.']]);
- return mk('Which sentence uses commas correctly?','',nm+', '+r[0]+' '+r[1],[nm+' '+r[0]+', '+r[1],nm+' '+r[0]+' '+r[1]],'Use a comma to set off the name of the person you are talking to.','Comma with a name: '+nm+' '+r[0]+' '+r[1]);
+ return mk('Which sentence uses commas correctly?','',nm+', '+r[0]+' '+r[1],[nm+' '+r[0]+', '+r[1],nm+' '+r[0]+' '+r[1],nm+', '+r[0]+', '+r[1]],'Use a comma to set off the name of the person you are talking to.','Comma with a name: '+nm+' '+r[0]+' '+r[1]);
 }
 var CJ=[['I wanted to play outside','it was raining','but','so','or',1],['We stayed inside','it was raining','because','but','or',0],['She studied hard','she passed the test','so','but','or',1],['He was tired','he kept reading','but','so','or',1],['Tom likes soccer','Ana likes tennis','and','because','or',1],['We can walk to the park','we can ride our bikes','or','because','so',1],['I will go to the party','I finish my homework','after','but','or',0],['The ice melted','the sun was hot','because','but','or',0],['Mia was hungry','she made a sandwich','so','but','or',1],['I like cats','I do not like dogs','but','because','so',1],['The store was closed','we went home','so','but','or',1],['Please sit down','the movie starts','before','but','or',0]],
+CJ3=['if','so','because','if','until','until','because','until','if','until','if','so'],CJH3=['until','or','or'],
 CJH=[['We went to the park','it was cold','although','so','or',0],['You cannot play','you finish your chores','unless','because','so',0],['She sang loudly','her brother played the drums','while','unless','so',0]],
 CD={and:'adds ideas together',but:'shows a difference',so:'shows a result',because:'gives a reason',or:'gives a choice',after:'tells what comes later',before:'tells what comes first',although:'shows a contrast',unless:'means “if not”',while:'means “at the same time”'};
 function fConj(){
- var r=pick(GR>=4&&LV>=3?CJ.concat(CJH):CJ);
- return mk('Pick the best joining word.',r[0]+(r[5]?',':'')+' ___ '+r[1]+'.',r[2],[r[3],r[4]],'The word “'+r[2]+'” '+CD[r[2]]+', so it fits best.','Joining word: '+r[0]+' ___ '+r[1],1);
+ var pl=GR>=4&&LV>=3?CJ.concat(CJH):CJ,kx=rnd(0,pl.length-1),r=pl[kx],w3=CJ3.concat(CJH3)[kx];
+ return mk('Pick the best joining word.',r[0]+(r[5]?',':'')+' ___ '+r[1]+'.',r[2],[r[3],r[4],w3],'The word “'+r[2]+'” '+CD[r[2]]+', so it fits best.','Joining word: '+r[0]+' ___ '+r[1],1);
 }
 function fAgree(){
  var sg=['The dog','My sister','The teacher','Our neighbor'],pl=['The dogs','My friends','The kids','Two birds'],vb=[['run','runs','running'],['play','plays','playing'],['jump','jumps','jumping'],['eat','eats','eating'],['sing','sings','singing'],['like','likes','liking']],tl=['in the yard.','at lunch.','every day.','after school.'];
  var hard=GR>=3&&LV>=4&&Math.random()<.6,isP=Math.random()<.5,subj,v,tail;
  if(hard){subj=pick(['The box of crayons','The bag of apples','The pile of books','The group of kids']);v=pick([['are','is','being'],['sit','sits','sitting'],['fall','falls','falling']]);isP=false;tail=pick(['near the door.','on the table.','by the window.']);}
  else{subj=pick(isP?pl:sg);v=pick(vb);tail=pick(tl);}
- return mk('Pick the verb that fits.',subj+' ___ '+tail,isP?v[0]:v[1],[isP?v[1]:v[0],v[2]],hard?'Ignore the “of” phrase. The main subject is one thing, so use the verb that goes with one.':'The verb must match the subject. One subject uses a verb with -s (runs). More than one subject uses a verb without -s (run).','Subject-verb agreement: '+subj+' '+tail,1);
+ return mk('Pick the verb that fits.',subj+' ___ '+tail,isP?v[0]:v[1],[isP?v[1]:v[0],v[2],'to '+v[0]],hard?'Ignore the “of” phrase. The main subject is one thing, so use the verb that goes with one.':'The verb must match the subject. One subject uses a verb with -s (runs). More than one subject uses a verb without -s (run).','Subject-verb agreement: '+subj+' '+tail,1);
 }
 var PR=[['Tom and ___ went to the store.','I','me','myself'],['The teacher gave ___ a sticker.','me','I','myself'],['___ is my best friend.','She','Her','Hers'],['The gift is for Dad and ___.','him','he','his'],['Ana and ___ are twins.','I','me','my'],['I left ___ coat at school.','my','me','I'],['Please sit next to Leo and ___.','me','I','mine'],['The dog wagged ___ tail.','its','it’s','their'],['___ going to the park today.','They’re','Their','There'],['___ books are on the table.','Their','There','They’re']];
 function fPron(){
- var r=pick(GR===2?[PR[0],PR[1],PR[2],PR[3],PR[4],PR[5]]:PR);
- return mk('Pick the word that fits.',r[0],r[1],[r[2],r[3]],'Try each choice by itself in the sentence. Use I or she as the subject and me or her as the object. Their shows ownership, there shows a place, and they’re means they are. Here, “'+r[1]+'” fits best.','Word choice: '+r[0],1);
+ var PRX=['my','mine','Me','she','myself','mine','my','it','There’s','They'],ix=pick(GR===2?[0,1,2,3,4,5]:[0,1,2,3,4,5,6,7,8,9]),r=PR[ix];
+ return mk('Pick the word that fits.',r[0],r[1],[r[2],r[3],PRX[ix]],'Try each choice by itself in the sentence. Use I or she as the subject and me or her as the object. Their shows ownership, there shows a place, and they’re means they are. Here, “'+r[1]+'” fits best.','Word choice: '+r[0],1);
 }
 function fQuote(){
  var who=pick(['Mia','Leo','The teacher','Dad']),isQ=Math.random()<.4,sp=isQ?pick(['Where is my hat','Can we go outside','What time is lunch']):pick(['I am ready to go','Please close the door','We won the game']),vb=isQ?'asked':'said',en=isQ?'?':'.';
- return mk('Which sentence is punctuated correctly?','',who+' '+vb+', “'+sp+en+'”',[who+' '+vb+' “'+sp+en+'”',who+' '+vb+', “'+sp+'”'+en],'Put a comma after said or asked before the quote. Put the ending mark inside the quotation marks.','Dialogue punctuation: '+who+' '+vb+' '+sp);
+ return mk('Which sentence is punctuated correctly?','',who+' '+vb+', “'+sp+en+'”',[who+' '+vb+' “'+sp+en+'”',who+' '+vb+', “'+sp+'”'+en,who+' '+vb+', '+sp+en],'Put a comma after said or asked before the quote. Put the ending mark inside the quotation marks.','Dialogue punctuation: '+who+' '+vb+' '+sp);
 }
 var GF={cap:fCap,order:fOrder,wordkind:fWordKind,type:fType,pos:fPos,plural:fPlural,tense:fTense,frag:fFrag,apos:fApos,comma:fComma,conj:fConj,agree:fAgree,pron:fPron,quote:fQuote};
 var GT={cap:[0,2,1],order:[0,2,1],wordkind:[0,1,1],type:[0,5,2],pos:[1,5,2],plural:[1,4,1],tense:[1,5,2],frag:[1,5,3],apos:[2,5,2],comma:[2,5,2],conj:[2,5,2],agree:[2,5,2],pron:[2,5,3],quote:[4,5,1]};
@@ -936,7 +968,7 @@ WL.forEach(function(l){l.forEach(function(w){ALLW[w]=1;});});
 function homs(w){var r=[];HOM.forEach(function(g){if(g.indexOf(w)>-1)g.forEach(function(x){if(x!==w)r.push(x);});});return r;}
 function misspell(w){
  var out={},t=0,V='aeiou';
- while(Object.keys(out).length<2&&t++<80){
+ while(Object.keys(out).length<3&&t++<160){
   var m=rnd(0,4),x=w,j;
   if(m===0&&w.length>2){j=rnd(0,w.length-2);x=w.slice(0,j)+w.charAt(j+1)+w.charAt(j)+w.slice(j+2);}
   else if(m===1&&w.length>3){j=rnd(1,w.length-1);x=w.slice(0,j)+w.slice(j+1);}
@@ -958,7 +990,7 @@ function altChunks(w,i,cl){
  var ch=w.substr(i,cl),V='aeiou',C='bcdfghklmnprstw',sim={b:'d',d:'b',m:'n',n:'m',p:'b',c:'k',k:'c',s:'z',t:'d',f:'v',g:'j',l:'r',r:'l',a:'e',e:'a',i:'e',o:'u',u:'o'},out={},t=0;
  function ch1(c){return sim[c]||(V.indexOf(c)>-1?pick(V.split('')):pick(C.split('')));}
  function good(x){return x!==ch&&x.length===cl&&!out[x]&&!ALLW[w.slice(0,i)+x+w.slice(i+cl)];}
- while(Object.keys(out).length<2&&t++<150){
+ while(Object.keys(out).length<3&&t++<200){
   var x=ch,m=rnd(0,3),j=rnd(0,cl-1);
   if(m===0&&cl>1){var a=rnd(0,cl-2);x=ch.slice(0,a)+ch.charAt(a+1)+ch.charAt(a)+ch.slice(a+2);}
   else if(m===1){x=ch.slice(0,j)+ch1(ch.charAt(j))+ch.slice(j+1);}
@@ -966,7 +998,7 @@ function altChunks(w,i,cl){
   else if(cl>1){var j2=(j+1)%cl;x=ch.split('').map(function(c,n){return n===j||n===j2?ch1(c):c;}).join('');}
   if(good(x))out[x]=1;
  }
- var r=Object.keys(out),g=0;while(r.length<2&&g++<30){var f=ch.split('').map(function(c){return pick((V.indexOf(c)>-1?V:C).split(''));}).join('');if(f!==ch&&r.indexOf(f)<0)r.push(f);}
+ var r=Object.keys(out),g=0;while(r.length<3&&g++<40){var f=ch.split('').map(function(c){return pick((V.indexOf(c)>-1?V:C).split(''));}).join('');if(f!==ch&&r.indexOf(f)<0)r.push(f);}
  return r;
 }
 var FORCE=null;
@@ -987,7 +1019,7 @@ function gSpell(){
  var t=pick(types),q,h=homs(w),V='aeiou',how='The word is “'+w+'”. It is spelled '+w.split('').join(', ')+'. '+spTip(w);
  if(t==='listen'){
   var pool=uw(WL[g].concat(WL[GR])).filter(function(x){return x!==w&&h.indexOf(x)<0;}),near2=shuf(pool.filter(function(x){return Math.abs(x.length-w.length)<=1;}));
-  var wr=(near2.length>=2?near2:shuf(pool)).slice(0,2);
+  var wr=(near2.length>=3?near2:shuf(pool)).slice(0,3);
   q={prompt:'Listen. Which word did you hear?',say:'Tap Hear it to listen again.',vis:"<div class='eq'><span>🔊</span></div>",ans:w,opts:shuf([w].concat(wr)),speak:w,txt:'Listen and find: '+w};
  }else if(t==='missing'){
   var V2='aeiou',pats=['ough','augh','tion','sion','igh','ie','ei','ea','ee','oo','ou','ai','ay','ow','ck','ll','ss','ph','sh','th','kn','wr','gn','mb','bt','rh'].filter(function(p){return w.indexOf(p)>0||(w.indexOf(p)===0&&/^(kn|wr|gn|rh)$/.test(p));}),
@@ -1000,18 +1032,18 @@ function gSpell(){
  }else if(t==='silent'){
   var si=SIL[w],sx=pick(si),sl2=w.charAt(sx),silL={};si.forEach(function(ix){silL[w.charAt(ix)]=1;});
   var dis=uw(w.split('').filter(function(c){return !silL[c];})),g4=0;
-  while(dis.length<2&&g4++<40){var rl=pick('bcdfklmnprstw'.split(''));if(!silL[rl]&&dis.indexOf(rl)<0&&w.indexOf(rl)<0)dis.push(rl);}
-  q={prompt:'Listen. Which letter is silent?',say:'A silent letter is in the spelling, but you do not hear it.',vis:lets(w),ans:sl2,opts:shuf([sl2].concat(shuf(dis).slice(0,2))),speak:w,txt:'Silent letter in '+w};
+  while(dis.length<3&&g4++<60){var rl=pick('bcdfklmnprstw'.split(''));if(!silL[rl]&&dis.indexOf(rl)<0&&w.indexOf(rl)<0)dis.push(rl);}
+  q={prompt:'Listen. Which letter is silent?',say:'A silent letter is in the spelling, but you do not hear it.',vis:lets(w),ans:sl2,opts:shuf([sl2].concat(shuf(dis).slice(0,3))),speak:w,txt:'Silent letter in '+w};
   how='The word is “'+w+'”. The silent letter is “'+sl2+'”. We write it, but we do not say it. '+spTip(w);q.viz=lets(w,sx,sx+1);
  }else if(t==='correct'){
   var ms=misspell(w);
-  if(ms.length<2){ms=ms.concat([w.charAt(0)+w.slice(1).split('').reverse().join('')]).filter(function(x,ix,ar){return x!==w&&ar.indexOf(x)===ix;});}
-  q={prompt:'Which word is spelled correctly?',say:'Tap Hear it to hear the word.',vis:'',ans:w,opts:shuf([w].concat(ms.slice(0,2))),speak:w,txt:'Spelled correctly: '+w};
+  if(ms.length<3){ms=ms.concat([w.charAt(0)+w.slice(1).split('').reverse().join('')]).filter(function(x,ix,ar){return x!==w&&ar.indexOf(x)===ix;});}
+  q={prompt:'Which word is spelled correctly?',say:'Tap Hear it to hear the word.',vis:'',ans:w,opts:shuf([w].concat(ms.slice(0,3))),speak:w,txt:'Spelled correctly: '+w};
  }else{
   var ls=w.split(''),sc,tt=0,sw=[];do{sc=shuf(ls).join('');tt++;}while(sc===w&&tt<30);
   for(var a2=0;a2<w.length-1;a2++){var v2=w.slice(0,a2)+w.charAt(a2+1)+w.charAt(a2)+w.slice(a2+2);if(v2!==w&&!ALLW[v2]&&sw.indexOf(v2)<0)sw.push(v2);}
-  var g3=0;while(sw.length<2&&g3++<60){var v3=shuf(ls).join('');if(v3!==w&&!ALLW[v3]&&sw.indexOf(v3)<0)sw.push(v3);}
-  q={prompt:'Unscramble the letters. Which choice spells the word?',say:'Careful! The wrong choices use the same letters.',vis:"<div class='eq' style='letter-spacing:6px'><span>"+sc.split('').join(' ')+'</span></div>',ans:w,opts:shuf([w].concat(shuf(sw).slice(0,2))),speak:sc.split('').join(', '),txt:'Unscramble: '+sc};
+  var g3=0;while(sw.length<3&&g3++<80){var v3=shuf(ls).join('');if(v3!==w&&!ALLW[v3]&&sw.indexOf(v3)<0)sw.push(v3);}
+  q={prompt:'Unscramble the letters. Which choice spells the word?',say:'Careful! The wrong choices use the same letters.',vis:"<div class='eq' style='letter-spacing:6px'><span>"+sc.split('').join(' ')+'</span></div>',ans:w,opts:shuf([w].concat(shuf(sw).slice(0,3))),speak:sc.split('').join(', '),txt:'Unscramble: '+sc};
  }
  var hh=spRule(w);q.hint=t==='listen'?'Say the word slowly. Listen for the first sound and the last sound.':t==='missing'?'Stretch the word out like a rubber band and say each sound.'+(hh?' Spelling clue: '+hh:''):t==='silent'?'Say the word slowly. Which letter do you not hear?':t==='scramble'?'The word starts with the letter “'+w.charAt(0)+'”. Say the sounds in order.':(hh?'Spelling clue: '+hh:'Say the word slowly and break it into small parts.');
  q.list=0;q.noauto=t==='scramble'?1:0;q.how=how;if(!q.viz)q.viz=lets(w);q.key='spell|'+w+'|'+t;return q;
@@ -1036,35 +1068,35 @@ function wq(prompt,vis,ans,wrongs,how,txt,hint,viz){var q=mk(prompt,vis,ans,wron
 function bigw(w){return "<div class='eq'><span>"+w+'</span></div>';}
 function rpick(a,n,not){return pickN(a,n,not);}
 function rBreaker(){
- var g=Math.min(GR,3),j=Math.random()<.65?g:rnd(0,g),e=pick(RBL[j]).split('|'),w=e[0],reg=RGW[GR>=2?1:0],wrongs=rpick(reg,2,[w]);
+ var g=Math.min(GR,3),j=Math.random()<.65?g:rnd(0,g),e=pick(RBL[j]).split('|'),w=e[0],reg=RGW[GR>=2?1:0],wrongs=rpick(reg,3,[w]);
  return wq('Which word is a rule breaker (a tricky word)?','',w,wrongs,'“'+w+'” is a rule breaker. '+e[1]+' Rule breakers do not follow the usual spelling rules, so we learn them by heart.','Rule breaker: '+w,'Rule breakers are tricky words. Sound out each word. Which one does not sound the way it looks?',lets(w));
 }
 function rMagic(){
- if(LV>=2&&Math.random()<.5){var p=pick(MGP),o=rpick(MGP.map(function(x){return x[1];}),2,[p[1]]);
+ if(LV>=2&&Math.random()<.5){var p=pick(MGP),o=rpick(MGP.map(function(x){return x[1];}),3,[p[1]]);
   return wq('Add magic e to “'+p[0]+'”. Which new word do you make?','',p[1],o,p[0]+' plus magic e makes '+p[1]+'. The e at the end is silent, and it makes the vowel say its name.','Magic e: '+p[0],'Add an e to the end, then say the new word. Does the vowel say its name?',chips([p[0],'+ e',p[1]],[2]));}
- var m=pick(Object.keys(MGE)),c=rpick(CVC,2);
+ var m=pick(Object.keys(MGE)),c=rpick(CVC,3);
  return wq('Which word has magic e (a silent e that makes the vowel say its name)?','',m,c,'“'+m+'” has magic e. The e at the end is silent, and it makes the vowel before it say its name.','Magic e word',"Look for an e at the end of the word.",lets(m,m.length-1,m.length));
 }
 function rBossy(){var w=pick(BRW),m=/ar|or|er|ir|ur/.exec(w);
- return wq('Which word has a bossy r (the r changes the vowel sound)?','',w,rpick(CVC,2),'In “'+w+'” the r is bossy. It changes the vowel sound, so we hear “'+m[0]+'” instead of a short vowel. Look for ar, or, er, ir, and ur.','Bossy r word','Look for ar, or, er, ir, or ur.',lets(w,m.index,m.index+2));}
+ return wq('Which word has a bossy r (the r changes the vowel sound)?','',w,rpick(CVC,3),'In “'+w+'” the r is bossy. It changes the vowel sound, so we hear “'+m[0]+'” instead of a short vowel. Look for ar, or, er, ir, and ur.','Bossy r word','Look for ar, or, er, ir, or ur.',lets(w,m.index,m.index+2));}
 function rTeam(){var w=pick(VTW),m=/ai|oa|ee|ea|ay/.exec(w);
- return wq('Which word has a vowel team (two vowels that make one sound)?','',w,rpick(CVC,2),'In “'+w+'” the vowel team “'+m[0]+'” makes one sound. When two vowels go walking, the first one does the talking.','Vowel team word','Look for two vowels side by side, like ai, oa, ee, ea, or ay.',lets(w,m.index,m.index+2));}
-function rDigraph(){var w=pick(DGW),m=/sh|ch|th|wh/.exec(w),bad=LV>=3?rpick(BLW,1).concat(rpick(CVC,1)):rpick(CVC,2);
+ return wq('Which word has a vowel team (two vowels that make one sound)?','',w,rpick(CVC,3),'In “'+w+'” the vowel team “'+m[0]+'” makes one sound. When two vowels go walking, the first one does the talking.','Vowel team word','Look for two vowels side by side, like ai, oa, ee, ea, or ay.',lets(w,m.index,m.index+2));}
+function rDigraph(){var w=pick(DGW),m=/sh|ch|th|wh/.exec(w),bad=LV>=3?rpick(BLW,2).concat(rpick(CVC,1)):rpick(CVC,3);
  return wq('Which word has a digraph (two letters that make just ONE sound)?','',w,bad,'In “'+w+'” the letters “'+m[0]+'” make one new sound. Digraphs are sh, ch, th, and wh.','Digraph word','Look for sh, ch, th, or wh.',lets(w,m.index,m.index+2));}
 function rBlend(){var w=pick(BLW),m=/[^aeiou]{2}/.exec(w),i=m?m.index:0;
- return wq('Which word has a blend (you hear BOTH consonant sounds)?','',w,rpick(DGW,1).concat(rpick(CVC,1)),'In “'+w+'” you hear each sound in “'+(m?m[0]:w.slice(0,2))+'”. That is a blend. In a digraph like sh, two letters make one new sound.','Blend word','Say the word slowly. Do you hear two separate consonant sounds next to each other?',lets(w,i,i+2));}
+ return wq('Which word has a blend (you hear BOTH consonant sounds)?','',w,rpick(DGW,1).concat(rpick(CVC,2)),'In “'+w+'” you hear each sound in “'+(m?m[0]:w.slice(0,2))+'”. That is a blend. In a digraph like sh, two letters make one new sound.','Blend word','Say the word slowly. Do you hear two separate consonant sounds next to each other?',lets(w,i,i+2));}
 function rSyll(){
  var mx=GR===0?2:GR===1?3:GR===2?4:5,all=SYL.filter(function(x){return x.split('-').length<=mx;}),w=pick(all),n=w.split('-').length,pl=w.replace(/-/g,'');
- return wq('How many syllables (beats) are in “'+pl+'”? Clap it!',bigw(pl),n,[n+1,n-1<1?n+2:n-1],'Clap each beat: '+w.split('-').join(' - ')+'. That is '+n+' syllable'+(n>1?'s':'')+'. Every syllable has at least one vowel sound.','Syllables in '+pl,'Put your hand under your chin. Each time your chin drops, that is one syllable.',chips(w.split('-')));
+ return wq('How many syllables (beats) are in “'+pl+'”? Clap it!',bigw(pl),n,[n+1,n-1,n+2,n-2,n+3].filter(function(v){return v>0;}).slice(0,3),'Clap each beat: '+w.split('-').join(' - ')+'. That is '+n+' syllable'+(n>1?'s':'')+'. Every syllable has at least one vowel sound.','Syllables in '+pl,'Put your hand under your chin. Each time your chin drops, that is one syllable.',chips(w.split('-')));
 }
 function rCompound(){
  var cp=pick(CPW),parts=cp.split('+'),w=parts.join('');
- if(LV>=3&&Math.random()<.5){var wr=[],k=1;[-1,1,2,-2].forEach(function(d){var p=parts[0].length+d;if(p>0&&p<w.length&&wr.length<2&&d!==0)wr.push(w.slice(0,p)+' + '+w.slice(p));});
+ if(LV>=3&&Math.random()<.5){var wr=[],k=1;[-1,1,2,-2,3].forEach(function(d){var p=parts[0].length+d;if(p>0&&p<w.length&&wr.length<3&&d!==0)wr.push(w.slice(0,p)+' + '+w.slice(p));});
   return wq('What are the two small words in “'+w+'”?','',parts.join(' + '),wr,w+' is a compound word. '+parts[0]+' + '+parts[1]+' = '+w+'.','Compound split: '+w,'Look for two small words you already know.',chips([parts[0],parts[1],w],[2]));}
- return wq('Which word is a compound word (two small words put together)?','',w,rpick(NCW,2),w+' is a compound word: '+parts[0]+' + '+parts[1]+' = '+w+'.','Compound word: '+w,'Can you split the word into two smaller words that you know?',chips([parts[0],parts[1],w],[2]));
+ return wq('Which word is a compound word (two small words put together)?','',w,rpick(NCW,3),w+' is a compound word: '+parts[0]+' + '+parts[1]+' = '+w+'.','Compound word: '+w,'Can you split the word into two smaller words that you know?',chips([parts[0],parts[1],w],[2]));
 }
 function rAffix(){
- var ks=GR===2?['un','re','ful','less']:Object.keys(AFX),k=pick(ks),a=AFX[k],b=pick(a[1]),suf=['ful','less','ly','er'].indexOf(k)>-1,w=suf?b+k:k+b,m=a[0],wr=pickN(Object.keys(AFX).map(function(x){return AFX[x][0];}).filter(function(x,i,ar){return ar.indexOf(x)===i&&x!==m&&!(x.indexOf('not')>-1&&m.indexOf('not')>-1);}),2);
+ var ks=GR===2?['un','re','ful','less']:Object.keys(AFX),k=pick(ks),a=AFX[k],b=pick(a[1]),suf=['ful','less','ly','er'].indexOf(k)>-1,w=suf?b+k:k+b,m=a[0],wr=pickN(Object.keys(AFX).map(function(x){return AFX[x][0];}).filter(function(x,i,ar){return ar.indexOf(x)===i&&x!==m&&!(x.indexOf('not')>-1&&m.indexOf('not')>-1);}),3);
  return wq('What does “'+(suf?'-'+k:k+'-')+'” mean in the word “'+w+'”?','',m,wr,(suf?'The suffix -'+k:'The prefix '+k+'-')+' means “'+m+'”. '+(suf?b+' + '+k:k+' + '+b)+' = '+w+'.','Affix '+k+' in '+w,'Take the small word away. What is left? Then think about what the part you took away adds.',chips(suf?[b,k,w]:[k,b,w],[2]));
 }
 var RT={breaker:[0,5,1,rBreaker],magic:[0,5,1,rMagic],syll:[0,5,1,rSyll],compound:[0,5,2,rCompound],digraph:[0,5,2,rDigraph],bossy:[1,5,1,rBossy],team:[1,5,2,rTeam],blend:[1,5,3,rBlend],affix:[2,5,2,rAffix]};
@@ -1090,18 +1122,37 @@ function pickGrade(){
  wire();
  Array.prototype.forEach.call(app.querySelectorAll('[data-g]'),function(b){b.onclick=function(){GR=parseInt(b.getAttribute('data-g'),10);hasGrade=true;try{localStorage.setItem('hop-grade',String(GR));}catch(e){}menu();};});
 }
+function audition(){
+ var vs=[],cur='',sp=1,pt=1;
+ try{vs=speechSynthesis.getVoices().filter(function(v){return /^en/i.test(v.lang);});}catch(e){}
+ vs.sort(function(a,b){var qa=/premium|enhanced|siri/i.test(a.name)?0:1,qb=/premium|enhanced|siri/i.test(b.name)?0:1;return qa-qb||a.name.localeCompare(b.name);});
+ try{cur=localStorage.getItem('hop-vname')||'';sp=parseFloat(localStorage.getItem('hop-speed'))||1;pt=parseFloat(localStorage.getItem('hop-pitch'))||1;}catch(e){}
+ var h=header()+"<div class='card'><h2>🎧 Audition voices</h2><p style='margin:6px 0'>Tap ▶ to hear each voice, then tap Use to pick one. Voices marked Premium or Enhanced usually sound the most natural.</p><p style='margin:10px 0 4px;font-weight:600'>Speed (left is slower)</p><input type='range' id='as' min='0.6' max='1.3' step='0.05' value='"+sp+"' style='width:100%'><p style='margin:10px 0 4px;font-weight:600'>Pitch (left is lower and softer)</p><input type='range' id='ap' min='0.7' max='1.5' step='0.05' value='"+pt+"' style='width:100%'></div><div class='card' style='max-height:50vh;overflow:auto'>";
+ if(!vs.length)h+='<p>No voices found yet. Tap Back and try again in a moment.</p>';
+ vs.forEach(function(v,i){var nm=v.name.replace(/[<>&\"']/g,'');h+="<div class='vrow'><span><b>"+nm+"</b><small>"+v.lang+(v.name===cur?' · in use':'')+"</small></span><button class='icon' data-p='"+i+"' aria-label='Play'>▶</button><button class='big sm' data-u='"+i+"'>Use</button></div>";});
+ app.innerHTML=h+"</div><div class='row'><button class='big' id='ab'>Back</button></div>";wire();
+ var SAMPLE='Hi! I am Hop. Let us learn together. Can you spell the word friend?';
+ function play(i){try{speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(SAMPLE);u.voice=vs[i];u.rate=parseFloat(document.getElementById('as').value);u.pitch=parseFloat(document.getElementById('ap').value);speechSynthesis.speak(u);}catch(e){}}
+ Array.prototype.forEach.call(app.querySelectorAll('[data-p]'),function(b){b.onclick=function(){play(parseInt(b.getAttribute('data-p'),10));};});
+ Array.prototype.forEach.call(app.querySelectorAll('[data-u]'),function(b){b.onclick=function(){var v=vs[parseInt(b.getAttribute('data-u'),10)];
+  try{localStorage.setItem('hop-vname',v.name);localStorage.setItem('hop-speed',document.getElementById('as').value);localStorage.setItem('hop-pitch',document.getElementById('ap').value);}catch(e){}
+  speak('Great choice! This is my new voice.');audition();};});
+ document.getElementById('ab').onclick=menu;
+}
 function menu(){
  var html=header()+"<div class='card hero'><span class='frog hop'>🐸</span><h1>Hop’s Math Pond</h1><div class='row' style='margin-top:12px'><button class='big alt sm' id='gr'>🎓 "+GN[GR]+"</button><button class='big alt sm' id='rp'>📋 Grown-up report</button></div></div><div class='menu'>";
  MODES.filter(function(m){return GM[m.id].indexOf(GR)>-1;}).forEach(function(m){html+="<button class='mode' data-m='"+m.id+"' style='background:"+m.c+"'><span class='e'>"+m.e+'</span><span>'+(GR>=3&&ONAME[m.id]?ONAME[m.id][0]:m.name)+'<small>'+(GR>=3&&ONAME[m.id]?ONAME[m.id][1]:m.desc)+'</small></span></button>';});
- html+="</div><div class='card hero'><h2>Choose Hop’s voice</h2><div class='row' style='margin-top:12px'><button class='big"+(voiceKind==='teacher'?'':' alt')+"' data-v='teacher'>👩‍🏫 Teacher</button><button class='big"+(voiceKind==='child'?'':' alt')+"' data-v='child'>🧒 Kid</button></div><p style='margin:14px 0 6px;font-weight:600'>More voices on this device</p><select id='vsel' class='sel' aria-label='Voice'></select><p style='margin:12px 0 6px;font-weight:600'>Speaking speed</p><select id='vspd' class='sel' aria-label='Speed'><option value='0.75'>Slow</option><option value='1'>Normal</option><option value='1.2'>Fast</option></select></div>";
+ html+="</div><div class='card hero'><h2>Choose Hop’s voice</h2><div class='row' style='margin-top:12px'><button class='big"+(voiceKind==='teacher'?'':' alt')+"' data-v='teacher'>👩‍🏫 Teacher</button><button class='big"+(voiceKind==='soft'?'':' alt')+"' data-v='soft'>🌙 Soft</button><button class='big"+(voiceKind==='child'?'':' alt')+"' data-v='child'>🧒 Kid</button><button class='big"+(voiceKind==='reader'?'':' alt')+"' data-v='reader'>📖 Storyteller</button></div><div id='pkbox' style='display:none'><p style='margin:14px 0 6px;font-weight:600'>⭐ Hop’s recorded voices (most natural)</p><select id='pksel' class='sel' aria-label='Recorded voice'></select><p style='margin:6px 0 0;font-size:.9rem;opacity:.8'>Used for spelling words and cheers. Other speech uses the iPad voice.</p></div><p style='margin:14px 0 6px;font-weight:600'>More voices on this device</p><select id='vsel' class='sel' aria-label='Voice'></select><p style='margin:12px 0 6px;font-weight:600'>Speaking speed</p><select id='vspd' class='sel' aria-label='Speed'><option value='0.75'>Slow</option><option value='1'>Normal</option><option value='1.2'>Fast</option></select><button class='big alt sm' id='aud' style='margin-top:14px'>🎧 Audition all voices</button></div>";
  app.innerHTML=html;wire();
+ fillPk();
  var vsel=document.getElementById('vsel'),vspd=document.getElementById('vspd');
  function fillV(){try{var vs=speechSynthesis.getVoices().filter(function(v){return /^en/i.test(v.lang);}),cur=localStorage.getItem('hop-vname')||'';
   vsel.innerHTML='<option value="">Automatic</option>'+vs.map(function(v){var n=v.name.replace(/"/g,'&quot;');return '<option value="'+n+'"'+(v.name===cur?' selected':'')+'>'+v.name+' ('+v.lang+')</option>';}).join('');}catch(e){}}
  fillV();try{speechSynthesis.onvoiceschanged=fillV;}catch(e){}
  try{vspd.value=localStorage.getItem('hop-speed')||'1';}catch(e){}
- vsel.onchange=function(){try{localStorage.setItem('hop-vname',vsel.value);}catch(e){}speak('Hi! This is how I sound. Let’s do some math!');};
+ vsel.onchange=function(){try{localStorage.setItem('hop-vname',vsel.value);if(!vsel.value)localStorage.removeItem('hop-pitch');}catch(e){}speak('Hi! This is how I sound. Let’s do some math!');};
  vspd.onchange=function(){try{localStorage.setItem('hop-speed',vspd.value);}catch(e){}speak('Hi! This is how fast I talk.');};
+ document.getElementById('aud').onclick=audition;
  document.getElementById('gr').onclick=pickGrade;
  document.getElementById('rp').onclick=function(){report(false,menu);};
  Array.prototype.forEach.call(app.querySelectorAll('[data-v]'),function(b){b.onclick=function(){
@@ -1132,7 +1183,7 @@ function play(mode){
   var a='',fl=Math.max.apply(null,q.opts.map(function(o){return String(o).length;})),fs=q.list?'':q.sm?'1.8rem':fl>=8?'1.15rem':fl>=6?'1.4rem':fl>=5?'1.9rem':'';q.opts.forEach(function(o,oi){a+='<button class="ans" data-v="'+o+'"'+(fs?' style="font-size:'+fs+'"':'')+'>'+(q.lbl?'ABCD'.charAt(oi)+'. ':'')+o+'</button>';});
   app.innerHTML=header()+'<div style="text-align:center;font-weight:700;font-size:1.1rem">'+GN[GR]+' · Level '+LV+' of 5</div><div class="pads" aria-label="Question '+(i+1)+' of '+N+'">'+pads+'</div>'+
    '<div class="card q"><span class="frog" id="frog">🐸</span><div class="prompt">'+q.prompt+'</div>'+q.vis+'<div class="row" style="gap:8px"><button class="big alt" id="hear" style="font-size:1rem;padding:8px 14px">🔊 Hear it</button><button class="big alt" id="scr" style="font-size:1rem;padding:8px 14px">✏️ Scratch paper</button>'+(q.hint?'<button class="big alt" id="hint" style="font-size:1rem;padding:8px 14px">💡 Hint</button>':'')+'</div></div>'+
-   '<div class="say" id="say" aria-live="polite">'+q.say+'</div><div class="answers'+(q.list?' l':'')+'" style="'+(q.two?'grid-template-columns:repeat(2,1fr)':q.list?'grid-template-columns:1fr':'')+'">'+a+'</div><div id="ls"></div>';
+   '<div class="say" id="say" aria-live="polite">'+q.say+'</div><div class="answers'+(q.list?' l':'')+'" style="'+(q.two?'grid-template-columns:repeat(2,1fr)':q.list?'grid-template-columns:1fr':q.opts.length>=4?'grid-template-columns:repeat(2,1fr)':'')+'">'+a+'</div><div id="ls"></div>';
   wire();
   document.getElementById('hear').onclick=function(){say2(q.speak);};
   document.getElementById('scr').onclick=openPad;
@@ -1167,7 +1218,7 @@ function play(mode){
    ST.r++;ST.m[mode].r++;total++;save();res.push(1);score++;streak++;miss=0;
    var msg='';if(streak>=2&&LV<5){LV++;streak=0;msg=' Level up! ⬆️';}
    document.getElementById('frog').classList.add('hop');
-   say.textContent=pick(['Great job!','You got it!','Hop hop hooray!','Super!','Awesome!'])+msg;
+   var pr=pick(['Great job!','You got it!','Hop hop hooray!','Super!','Awesome!']);say.textContent=pr+msg;if(PK.cur)speak(pr);
    beep([523,659,784]);document.querySelector('.pill').textContent='⭐ '+total;
    if(total%25===0)due=true;
    setTimeout(nextQ,1100);
@@ -1197,6 +1248,7 @@ function play(mode){
  function end(){if(due){due=false;report(true,summary);}else summary();}
  show();
 }
+pkInit();
 if(hasGrade)menu();else pickGrade();
 })();
 </script>
