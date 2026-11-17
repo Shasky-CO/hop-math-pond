@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
+<!-- saved from url=(0047)file:///C:/Users/Loc/Downloads/index%20(1).html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Hop’s Math Pond</title>
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet">
+<link href="./index_files/css2" rel="stylesheet">
 <style>
 :root{--bg1:#c9f0f7;--bg2:#8fd3e3;--card:#fffdf4;--ink:#17375e;--btn:#ffffff;--accent:#ff7a59;--sun:#ffc93c;--leaf:#3fb55f;--bad:#ef6a6a;--shade:rgba(23,55,94,.22);
 box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
@@ -117,10 +117,13 @@ main{gap:10px;padding:12px}
 .vrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--shade)}
 .vrow span{flex:1;display:flex;flex-direction:column}
 .vrow small{opacity:.7}
+.ans svg{width:72px;height:72px;display:block;margin:2px auto 0}
+.ans .ol{font-size:1.1rem;display:block;font-weight:700}
+.lesson svg{width:100%;max-width:260px;height:auto;margin:0 auto}
 </style>
 </head>
 <body>
-<main id="app"></main>
+<main id="app"><div class="top"><button class="icon" id="home" aria-label="Home">🏠</button><span class="pill">⭐ 21</span><button class="icon" id="mute" aria-label="Sound on or off">🔊</button></div><div class="card hero"><span class="frog hop">🐸</span><h1>Hop’s Math Pond</h1><div class="row" style="margin-top:12px"><button class="big alt sm" id="gr">🎓 1st grade</button><button class="big alt sm" id="rp">📋 Grown-up report</button></div></div><div class="menu"><button class="mode" data-m="count" style="background:#ffd96b"><span class="e">🔢</span><span>Count it<small>How many do you see?</small></span></button><button class="mode" data-m="add" style="background:#9fe3a6"><span class="e">➕</span><span>Put together<small>Add numbers up</small></span></button><button class="mode" data-m="sub" style="background:#ffb3a1"><span class="e">➖</span><span>Take away<small>How many are left?</small></span></button><button class="mode" data-m="cmp" style="background:#c4b5f5"><span class="e">⚖️</span><span>Bigger or smaller<small>Pick the right number</small></span></button><button class="mode" data-m="next" style="background:#9fd8f5"><span class="e">🪜</span><span>What comes next?<small>Fill in the missing number</small></span></button><button class="mode" data-m="tens" style="background:#ffd0e8"><span class="e">🔟</span><span>Tens and ones<small>Build numbers up to 99</small></span></button><button class="mode" data-m="miss" style="background:#ffe0a3"><span class="e">❓</span><span>Missing number<small>3 + ? = 8</small></span></button><button class="mode" data-m="word" style="background:#b8f0d8"><span class="e">📖</span><span>Story problems<small>Listen and solve</small></span></button><button class="mode" data-m="time" style="background:#f5c6c6"><span class="e">🕒</span><span>Tell time<small>Hours and half hours</small></span></button><button class="mode" data-m="shapes" style="background:#c4b5f5"><span class="e">🔷</span><span>Shapes<small>Name and count sides</small></span></button><button class="mode" data-m="length" style="background:#9fe3a6"><span class="e">📏</span><span>Measure length<small>Use a ruler</small></span></button><button class="mode" data-m="data" style="background:#ffd96b"><span class="e">📊</span><span>Graphs<small>Read picture graphs</small></span></button><button class="mode" data-m="read" style="background:#ffd0e8"><span class="e">📚</span><span>Reading<small>Read a story and answer</small></span></button><button class="mode" data-m="gram" style="background:#b8f0d8"><span class="e">✍️</span><span>Sentence structure<small>Grammar and punctuation</small></span></button><button class="mode" data-m="story" style="background:#ffe0a3"><span class="e">🧩</span><span>Story builder<small>Order and finish stories</small></span></button><button class="mode" data-m="spell" style="background:#c4b5f5"><span class="e">🔤</span><span>Spelling<small>Sight words and tricky words</small></span></button><button class="mode" data-m="silent" style="background:#ffd0e8"><span class="e">🤫</span><span>Silent letters<small>Letters we write but do not say</small></span></button><button class="mode" data-m="rules" style="background:#9fd8f5"><span class="e">🕵️</span><span>Word detective<small>Rule breakers, magic e, bossy r</small></span></button><button class="mode" data-m="nverb" style="background:#c4b5f5"><span class="e">🧠</span><span>Pattern puzzles<small>Shape logic puzzles</small></span></button></div><div class="card hero"><h2>Choose Hop’s voice</h2><div class="row" style="margin-top:12px"><button class="big" data-v="teacher">👩‍🏫 Teacher</button><button class="big alt" data-v="soft">🌙 Soft</button><button class="big alt" data-v="child">🧒 Kid</button><button class="big alt" data-v="reader">📖 Storyteller</button></div><div id="pkbox" style="display:none"><p style="margin:14px 0 6px;font-weight:600">⭐ Hop’s recorded voices (most natural)</p><select id="pksel" class="sel" aria-label="Recorded voice"></select><p style="margin:6px 0 0;font-size:.9rem;opacity:.8">Used for spelling words and cheers. Other speech uses the iPad voice.</p></div><p style="margin:14px 0 6px;font-weight:600">More voices on this device</p><select id="vsel" class="sel" aria-label="Voice"><option value="">Automatic</option><option value="Microsoft David - English (United States)">Microsoft David - English (United States) (en-US)</option><option value="Microsoft Mark - English (United States)">Microsoft Mark - English (United States) (en-US)</option><option value="Microsoft Zira - English (United States)">Microsoft Zira - English (United States) (en-US)</option><option value="Google US English">Google US English (en-US)</option><option value="Google UK English Female">Google UK English Female (en-GB)</option><option value="Google UK English Male">Google UK English Male (en-GB)</option></select><p style="margin:12px 0 6px;font-weight:600">Speaking speed</p><select id="vspd" class="sel" aria-label="Speed"><option value="0.75">Slow</option><option value="1">Normal</option><option value="1.2">Fast</option></select><button class="big alt sm" id="aud" style="margin-top:14px">🎧 Audition all voices</button></div></main>
 <script>
 (function(){
 var app=document.getElementById('app');
@@ -149,7 +152,8 @@ var MODES=[
  {id:'story',e:'🧩',name:'Story builder',desc:'Order and finish stories',c:'#ffe0a3'},
  {id:'spell',e:'🔤',name:'Spelling',desc:'Sight words and tricky words',c:'#c4b5f5'},
  {id:'silent',e:'🤫',name:'Silent letters',desc:'Letters we write but do not say',c:'#ffd0e8'},
- {id:'rules',e:'🕵️',name:'Word detective',desc:'Rule breakers, magic e, bossy r',c:'#9fd8f5'}
+ {id:'rules',e:'🕵️',name:'Word detective',desc:'Rule breakers, magic e, bossy r',c:'#9fd8f5'},
+ {id:'nverb',e:'🧠',name:'Pattern puzzles',desc:'Shape logic puzzles',c:'#c4b5f5'}
 ];
 var ITEMS=['🍎','⭐','🐞','🐟','🍪','🎈','🦋','🍓'];
 var total=0, muted=false, ctx=null, LV=1, lvls={};
@@ -245,7 +249,7 @@ function opts(ans,max){
  return Object.keys(s).map(Number).sort(function(){return Math.random()-.5;});
 }
 var GN=['Kindergarten','1st grade','2nd grade','3rd grade','4th grade','5th grade'];
-var GM={count:[0,1],add:[0,1,2,3,4],sub:[0,1,2,3,4],cmp:[0,1,2,3,4,5],next:[0,1,2],tens:[1,2,3,4,5],miss:[1,2],word:[0,1,2,3,4,5],time:[1,2,3],mult:[3,4,5],div:[3,4,5],frac:[3,4,5],dec:[4,5],round:[3,4,5],area:[3,4,5],ops:[5],shapes:[0,1,2],length:[0,1,2],data:[0,1,2],read:[0,1,2,3,4,5],gram:[0,1,2,3,4,5],story:[0,1,2,3,4,5],spell:[0,1,2,3,4,5],silent:[0,1,2,3,4,5],rules:[0,1,2,3,4,5]};
+var GM={count:[0,1],add:[0,1,2,3,4],sub:[0,1,2,3,4],cmp:[0,1,2,3,4,5],next:[0,1,2],tens:[1,2,3,4,5],miss:[1,2],word:[0,1,2,3,4,5],time:[1,2,3],mult:[3,4,5],div:[3,4,5],frac:[3,4,5],dec:[4,5],round:[3,4,5],area:[3,4,5],ops:[5],shapes:[0,1,2],length:[0,1,2],data:[0,1,2],read:[0,1,2,3,4,5],gram:[0,1,2,3,4,5],story:[0,1,2,3,4,5],spell:[0,1,2,3,4,5],silent:[0,1,2,3,4,5],rules:[0,1,2,3,4,5],nverb:[0,1,2,3,4,5]};
 var TIPS={count:'Have your child touch each item and count out loud, moving counted items to one side.',add:'Practice counting on: start at the bigger number and count up. Use fingers, toys, or a number line.',sub:'Try counting back, or use objects: start with the total, take some away, and count what is left.',cmp:'Line up two groups of objects to see which has more. For bigger numbers, compare the left digit first.',next:'Say number patterns out loud together, like 5, 10, 15. A hundreds chart helps.',tens:'Use dimes (tens) and pennies (ones), or blocks, to build numbers.',miss:'Ask: what do I add to get there? Count up from the small number to the total.',word:'Read the story together, circle the numbers, and ask: are we joining or taking away?',time:'Use an analog clock at home. Short hand is the hour, long hand is the minutes (each number is 5).'};
 var GR=1,hasGrade=false,due=false;
 try{var _g=localStorage.getItem('hop-grade');if(_g!==null){GR=parseInt(_g,10)||0;hasGrade=true;}}catch(e){}
@@ -1103,9 +1107,139 @@ var RT={breaker:[0,5,1,rBreaker],magic:[0,5,1,rMagic],syll:[0,5,1,rSyll],compoun
 function gRules(){var el=[];Object.keys(RT).forEach(function(k){if(GR>=RT[k][0]&&GR<=RT[k][1]&&LV>=RT[k][2])el.push(k);});
  if(GR>=3){el.push('breaker');el.push('affix');}
  var q=RT[pick(el)][3]();if(LV===5&&GR>=2){q.prompt='🏅 '+q.prompt;q.say='Challenge question!';}return q;}
+TIPS.nverb='These puzzles practice nonverbal reasoning (similar in spirit to tests like the NNAT, but not the official test). Talk it through out loud: What changes from box to box? Color, size, direction, number, or shape? Then ask what the missing box should do.';
+var COL=['#3b82f6','#facc15','#ffffff','#ef4444','#22c55e','#a855f7'],CN=['blue','yellow','white','red','green','purple'],SYM=['circle','square','diamond','star','hexagon'],ORI=['triangle','arrow'],SZN=['small','medium','big'];
+function nvPl(pts,st){return "<polygon points='"+pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ')+"'"+st+'/>';}
+function nvShape(s,cx,cy,R,c,r){
+ var st=" fill='"+COL[c]+"' stroke='#17375e' stroke-width='2' stroke-linejoin='round'",d,i,pts=[];
+ if(s==='circle')d="<circle cx='"+cx+"' cy='"+cy+"' r='"+R+"'"+st+'/>';
+ else if(s==='square')d="<rect x='"+(cx-R*.85)+"' y='"+(cy-R*.85)+"' width='"+(R*1.7)+"' height='"+(R*1.7)+"'"+st+'/>';
+ else if(s==='diamond')d=nvPl([[cx,cy-R],[cx+R,cy],[cx,cy+R],[cx-R,cy]],st);
+ else if(s==='triangle')d=nvPl([[cx,cy-R],[cx+R,cy+R*.8],[cx-R,cy+R*.8]],st);
+ else if(s==='arrow')d=nvPl([[cx,cy-R],[cx+R*.9,cy],[cx+R*.35,cy],[cx+R*.35,cy+R],[cx-R*.35,cy+R],[cx-R*.35,cy],[cx-R*.9,cy]],st);
+ else if(s==='star'){for(i=0;i<10;i++){var a=-Math.PI/2+i*Math.PI/5,rr=i%2?R*.45:R;pts.push([cx+rr*Math.cos(a),cy+rr*Math.sin(a)]);}d=nvPl(pts,st);}
+ else{for(i=0;i<6;i++){var b=Math.PI/6+i*Math.PI/3;pts.push([cx+R*Math.cos(b),cy+R*Math.sin(b)]);}d=nvPl(pts,st);}
+ return r?"<g transform='rotate("+(r*90)+' '+cx+' '+cy+")'>"+d+'</g>':d;
+}
+function nvCell(a,ox,oy){
+ var n=a.n||1,R=[13,18,23][a.z],o='',P=n===1?[[0,0]]:n===2?[[-1,0],[1,0]]:[[-1,.7],[1,.7],[0,-.8]];
+ if(n>1)R=R*0.55;
+ P.forEach(function(p){o+=nvShape(a.s,ox+30+(n===1?0:p[0]*R*1.15),oy+30+(n===1?0:p[1]*R*1.15),R,a.c,a.r||0);});return o;
+}
+function nvMat(cells,cols,qi,fill){
+ var rows=Math.ceil(cells.length/cols),o="<svg viewBox='0 0 "+cols*62+' '+rows*62+"'"+(rows===1?" class='wide'":'')+" role='img' aria-label='Puzzle'>";
+ cells.forEach(function(a,i){var x=(i%cols)*62,y=Math.floor(i/cols)*62,q=i===qi;
+  o+="<rect x='"+(x+1)+"' y='"+(y+1)+"' width='60' height='60' rx='6' fill='"+(q&&!fill?'none':'#f4f7fb')+"' stroke='"+(q?'#ff7a59':'#9ab')+"' stroke-width='"+(q?3:1.5)+"'"+(q&&!fill?" stroke-dasharray='5 4'":'')+'/>';
+  if(q&&!fill)o+="<text x='"+(x+31)+"' y='"+(y+43)+"' text-anchor='middle' font-size='34' font-weight='700' fill='#ff7a59' font-family='Fredoka,sans-serif'>?</text>";
+  else o+=nvCell(a,x+1,y+1);});
+ return o+'</svg>';
+}
+function nvOpt(a){return "<svg viewBox='0 0 62 62' role='img'><rect x='1' y='1' width='60' height='60' rx='6' fill='#f4f7fb' stroke='#9ab' stroke-width='1.5'/>"+nvCell(a,1,1)+'</svg>';}
+function ak(a){return a.s+a.c+a.z+(ORI.indexOf(a.s)>-1?a.r:0)+(a.n||1);}
+function cp(a){return JSON.parse(JSON.stringify(a));}
+function nvDesc(a){return (a.z===0?'small ':a.z===2?'big ':'')+(a.n>1?a.n+' ':'')+CN[a.c]+' '+a.s+(a.n>1?'s':'')+(ORI.indexOf(a.s)>-1?' pointing '+['up','right','down','left'][a.r]:'');}
+function nvDis(d,pool,pre,nc){
+ var seen={},res=[],t=0;seen[ak(d)]=1;
+ (pre||[]).forEach(function(x){if(!seen[ak(x)]&&res.length<3){seen[ak(x)]=1;res.push(x);}});
+ while(res.length<3&&t++<300){
+  var x=cp(d),muts=Math.random()<.3?2:1,i;
+  for(i=0;i<muts;i++){var m=pick(pool);
+   if(m==='s'){var fam=ORI.indexOf(x.s)>-1?ORI:SYM,o=fam.filter(function(v){return v!==x.s;});if(o.length)x.s=pick(o);}
+   else if(m==='c')x.c=rnd(0,nc-1);
+   else if(m==='z')x.z=rnd(0,2);
+   else if(m==='r'&&ORI.indexOf(x.s)>-1)x.r=rnd(0,3);
+   else if(m==='n')x.n=rnd(1,3);}
+  if(!seen[ak(x)]){seen[ak(x)]=1;res.push(x);}
+ }
+ return res;
+}
+function nvPack(q,ans,dis,cells,cols,qi,how,key){
+ var all=shuf([ans].concat(dis)),L='ABCD',oh={},opts=[],cor='';
+ all.forEach(function(a,i){var l=L.charAt(i);oh[l]="<span class='ol'>"+l+'</span>'+nvOpt(a);opts.push(l);if(a===ans)cor=l;});
+ q.opts=opts;q.ohtml=oh;q.ans=cor;q.list=0;q.noauto=0;q.lbl=0;
+ var sol=cells.slice();sol[qi]=ans;q.viz=nvMat(sol,cols,qi,true);
+ q.how='The answer is '+cor+', the '+nvDesc(ans)+'. '+how;q.hint='Ask: what changes from box to box? Color, size, direction, number, or shape?';q.key=key;q.speak=q.prompt.replace('🏅 ','');q.txt='Puzzle: '+key.slice(0,40);
+ return q;
+}
+function nvPat(){
+ var att=pick(LV>=3?['c','s','z']:['c','s']),typ=pick(LV<=2?['ABAB','AAB']:['ABAB','AAB','ABC']),nv=typ==='ABC'?3:2,nc=LV<=2?3:6;
+ var pools={c:[0,1,2,3,4,5].slice(0,nc),s:SYM.slice(0,LV<=2?3:5),z:[0,1,2]},vals=pickN(pools[att],nv);
+ var pat=typ==='ABAB'?[0,1,0,1,0,1]:typ==='AAB'?[0,0,1,0,0,1]:[0,1,2,0,1,2];
+ var base={s:'circle',c:att==='c'?0:0,z:1,r:0,n:1};
+ var cells=pat.map(function(i){var a=cp(base);a[att]=vals[i];return a;}),ans=cells[5],nm=function(v){return att==='c'?CN[v]:att==='s'?v:SZN[v];};
+ var dis=nvDis(ans,[att,att,att==='c'?'s':'c','z'],[],nc),shown=cells.slice();shown[5]={s:'circle',c:0,z:1,r:0,n:1};
+ var q={prompt:'Which shape comes next in the pattern?',say:'Find the pattern, then pick what comes next.',vis:nvMat(shown,6,5)};
+ return nvPack(q,ans,dis,cells,6,5,'The pattern repeats: '+pat.slice(0,5).map(function(i){return nm(vals[i]);}).join(', ')+'. So the next one is '+nm(vals[pat[5]])+'.','pat|'+att+typ+vals.join());
+}
+function nvAna(){
+ var two=GR>=3||LV>=4,types=['color','shape','rot','size','count'],tp=[],t;
+ tp.push(pick(types));if(two){do{t=pick(types);}while(t===tp[0]||(t==='rot'&&tp.indexOf('shape')>-1)||(t==='shape'&&tp.indexOf('rot')>-1));tp.push(t);}
+ var useRot=tp.indexOf('rot')>-1,fam=useRot?ORI:SYM,nc=GR===0?3:6;
+ var tc=rnd(0,nc-1),ts=pick(SYM),k=pick([1,2,3]),grow=Math.random()<.5;
+ function ok(a){ if(tp.indexOf('color')>-1&&a.c===tc)return false; if(tp.indexOf('shape')>-1&&a.s===ts)return false; if(tp.indexOf('size')>-1&&(grow?a.z>=2:a.z<=0))return false; if(tp.indexOf('count')>-1&&a.n>=3)return false; return true;}
+ function mkA(s){var a,g=0;do{a={s:s,c:rnd(0,nc-1),z:rnd(0,2),r:useRot?rnd(0,3):0,n:1};if(tp.indexOf('count')<0&&tp.indexOf('size')<0&&false)a.z=1;g++;}while(!ok(a)&&g<60);return a;}
+ function tf(a){var x=cp(a);tp.forEach(function(p){if(p==='color')x.c=tc;else if(p==='shape')x.s=ts;else if(p==='rot')x.r=(x.r+k)%4;else if(p==='size')x.z+=grow?1:-1;else if(p==='count')x.n+=1;});return x;}
+ var fm=fam.filter(function(v){return v!==ts||tp.indexOf('shape')<0;}),sa=pick(fm),sc=pick(fm.filter(function(v){return v!==sa;})),A=mkA(sa),C=mkA(sc);
+ if(tp.indexOf('count')<0&&tp.indexOf('size')<0){A.z=1;C.z=1;} if(tp.indexOf('count')<0)C.n=A.n=1;
+ if(tp.indexOf('color')<0)C.c=A.c; if(tp.indexOf('shape')<0&&!useRot&&false)C.s=A.s;
+ var B=tf(A),D=tf(C),cells=[A,B,C,D],pool=['s','c','z','r','n'].filter(function(m){return m!=='r'||useRot;}),pre=[tf(C)];
+ var wrongSet=[cp(C)];tp.forEach(function(p,i){if(tp.length>1){var y=cp(C),one=tp.slice();one.splice(i,1);var save=tp;tp=one;y=tf(C);tp=save;wrongSet.push(y);}});
+ var dis=nvDis(D,pool,wrongSet,nc);
+ var txt=tp.map(function(p){return p==='color'?'turns '+CN[tc]:p==='shape'?'becomes a '+ts:p==='rot'?'turns '+(k===2?'a half turn':k===1?'a quarter turn clockwise':'a quarter turn counter-clockwise'):p==='size'?'gets '+(grow?'bigger':'smaller'):'gets one more shape';}).join(' and ');
+ var q={prompt:'Which one goes in the empty box?',say:'Look at the top row. Do the same change to the bottom shape.',vis:nvMat([A,B,C,null],2,3)};
+ return nvPack(q,D,dis,[A,B,C,D],2,3,'Top row: the shape '+txt+'. Do the same to the bottom shape.','ana|'+tp.join()+ak(A)+ak(C));
+}
+function nvSer(){
+ var P=pick(['z','n','c'].concat(LV>=2?['r']:[])),hard=GR>=4||LV>=4,m=P==='r'?4:3,Q=(P==='c'||P==='r')?(P==='c'?'s':'c'):pick(['s','c']),nc=6;
+ var rowS=pickN(SYM,3),rowC=pickN([0,1,2,3,4,5],3),colS=pickN([0,1,2],3),cs3=pickN([0,1,2,3,4,5],3);
+ function cell(r,c){
+  var a={s:'circle',c:0,z:1,r:0,n:1},v=(r+c)%m;
+  if(P==='z')a.z=v;else if(P==='n')a.n=v+1;else if(P==='c')a.c=cs3[v];else{a.s='arrow';a.r=v;}
+  if(Q==='s'&&P!=='r')a.s=rowS[r];else if(Q==='c')a.c=rowC[r];
+  if(hard){if(P==='c'||P==='r')a.z=colS[c];else a.c=cs3[c];}
+  if(P==='r'&&Q==='s')a.s='arrow';
+  return a;}
+ var cells=[],i;for(i=0;i<9;i++)cells.push(cell(Math.floor(i/3),i%3));
+ var ans=cells[8],pool=[P==='c'?'c':P,Q,hard?(P==='c'||P==='r'?'z':'c'):P].filter(function(x){return !(x==='s'&&P==='r');});
+ if(P==='r')pool=['r',Q==='c'?'c':'z',hard?'z':'r'];
+ var dis=nvDis(ans,pool,[],nc),shown=cells.slice();shown[8]=null;
+ var an={z:'size',n:'number of shapes',c:'color',r:'direction'}[P],rowTxt=P==='r'?'Each row has its own color.':(Q==='s'?'Each row has its own shape.':'Each row has its own color.');
+ var q={prompt:'Which one goes in the empty box?',say:'Look across each row and down each column.',vis:nvMat(shown,3,8)};
+ return nvPack(q,ans,dis,cells,3,8,rowTxt+' Across each row, the '+an+' changes step by step. '+(hard?'The '+(P==='c'||P==='r'?'size':'color')+' also depends on the column. ':'')+'So the missing box is the '+nvDesc(ans)+'.','ser|'+P+Q+hard+rowS.join()+rowC.join()+cs3.join());
+}
+var PO={L:[[0,0],[0,1],[0,2],[1,2]],Z:[[0,0],[1,0],[1,1],[2,1]],F:[[1,0],[2,0],[0,1],[1,1],[1,2]],N:[[0,0],[0,1],[0,2],[1,2],[1,3]],P:[[0,0],[1,0],[0,1],[1,1],[0,2]],L5:[[0,0],[0,1],[0,2],[0,3],[1,3]]};
+function poNorm(c){var mx=Math.min.apply(null,c.map(function(p){return p[0];})),my=Math.min.apply(null,c.map(function(p){return p[1];}));return c.map(function(p){return [p[0]-mx,p[1]-my];});}
+function poRot(c,k){var r=c;for(var i=0;i<k;i++)r=poNorm(r.map(function(p){return [-p[1],p[0]];}));return poNorm(r);}
+function poMir(c){return poNorm(c.map(function(p){return [-p[0],p[1]];}));}
+function poSig(c){return poNorm(c).map(function(p){return p.join(':');}).sort().join('|');}
+function poSvg(c,col){var w=Math.max.apply(null,c.map(function(p){return p[0];}))+1,h=Math.max.apply(null,c.map(function(p){return p[1];}))+1,u=Math.min(50/w,50/h,16),ox=31-w*u/2,oy=31-h*u/2,o="<svg viewBox='0 0 62 62' role='img'><rect x='1' y='1' width='60' height='60' rx='6' fill='#f4f7fb' stroke='#9ab' stroke-width='1.5'/>";
+ c.forEach(function(p){o+="<rect x='"+(ox+p[0]*u)+"' y='"+(oy+p[1]*u)+"' width='"+u+"' height='"+u+"' fill='"+COL[col]+"' stroke='#17375e' stroke-width='1.5'/>";});return o+'</svg>';}
+function nvSpa(){
+ var easy=GR<=3&&LV<=3,names=easy?['L','Z']:['F','N','P','L5'],nm=pick(names),base=PO[nm],col=pick([0,3,4,5]),k,right,sigs={},opts=[],cor;
+ do{k=pick([1,2,3]);right=poRot(base,k);}while(poSig(right)===poSig(base));
+ sigs[poSig(right)]=1;var wrong=[],t=0;
+ while(wrong.length<3&&t++<200){
+  var c,kind=rnd(0,2);
+  if(kind===0)c=poRot(poMir(base),rnd(0,3));
+  else if(kind===1){var o2=names.filter(function(x){return x!==nm;});c=poRot(PO[pick(o2)],rnd(0,3));}
+  else c=poRot(poMir(PO[pick(names)]),rnd(0,3));
+  if(poSig(c)===poSig(base)||sigs[poSig(c)])continue;
+  var isRot=false;for(var r=0;r<4;r++)if(poSig(poRot(base,r))===poSig(c))isRot=true;if(isRot)continue;
+  sigs[poSig(c)]=1;wrong.push(c);
+ }
+ var all=shuf([right].concat(wrong)),L='ABCD',oh={};
+ all.forEach(function(c,i){var l=L.charAt(i);oh[l]="<span class='ol'>"+l+'</span>'+poSvg(c,col);opts.push(l);if(c===right)cor=l;});
+ return{prompt:'Which shape is the SAME as this one, just turned around?',say:'Turn it in your mind. Do not flip it over.',vis:poSvg(base,col),opts:opts,ohtml:oh,ans:cor,list:0,noauto:0,lbl:0,hint:'Turning is like spinning a paper on the table. Flipping over makes a mirror image, which is NOT the same.',txt:'Spatial puzzle '+nm,key:'spa|'+nm+k+opts.join(),speak:'Which shape is the same as this one, just turned around?',how:'The answer is '+cor+'. Turning a shape never flips it over. The wrong choices are mirror images (flipped) or a different shape.',viz:poSvg(right,col)};
+}
+var NT={pat:[0,2,1,nvPat],ana:[0,5,2,nvAna],ser:[2,5,2,nvSer],spa:[2,5,3,nvSpa]};
+function gNV(){
+ var el=[];Object.keys(NT).forEach(function(k){var d=NT[k],lv=d[2];if(k==='ser'&&GR>=3)lv=1;if(k==='spa'&&GR>=4)lv=1;if(k==='ana'&&GR>=1)lv=1;if(k==='pat'&&GR===2&&LV>3)return;if(GR>=d[0]&&GR<=d[1]&&LV>=lv)el.push(k);});
+ if(!el.length)el=['pat'];
+ var q=NT[pick(el)][3]();if(LV===5){q.prompt='🏅 '+q.prompt;q.say='Challenge puzzle!';}q.mode='nverb';return q;
+}
 function mkQ(mode){
- var f={count:gCount,add:GR>=3?gAddBig:gAdd,sub:GR>=3?gSubBig:gSub,cmp:GR>=3?gCmpBig:gCmp,next:gNext,tens:GR>=3?gPlace:gTens,miss:gMiss,word:GR>=3?gWord3:gWord,time:GR>=3?gTime3:gTime,mult:gMult,div:gDiv,frac:gFrac,dec:gDec,round:gRound,area:gArea,ops:gOps,shapes:gShapes,length:gLength,data:gData,read:gRead,gram:gGram,story:gStoryB,spell:gSpell,silent:gSilent,rules:gRules}[mode];
- var q=(mode==='read'||mode==='gram'||mode==='story'||mode==='spell'||mode==='silent'||mode==='rules')?uniq(f,function(x){return mode+'|'+(x.key||x.txt)+'|'+x.ans;}):f();q.mode=mode;return q;
+ var f={count:gCount,add:GR>=3?gAddBig:gAdd,sub:GR>=3?gSubBig:gSub,cmp:GR>=3?gCmpBig:gCmp,next:gNext,tens:GR>=3?gPlace:gTens,miss:gMiss,word:GR>=3?gWord3:gWord,time:GR>=3?gTime3:gTime,mult:gMult,div:gDiv,frac:gFrac,dec:gDec,round:gRound,area:gArea,ops:gOps,shapes:gShapes,length:gLength,data:gData,read:gRead,gram:gGram,story:gStoryB,spell:gSpell,silent:gSilent,rules:gRules,nverb:gNV}[mode];
+ var q=(mode==='read'||mode==='gram'||mode==='story'||mode==='spell'||mode==='silent'||mode==='rules'||mode==='nverb')?uniq(f,function(x){return mode+'|'+(x.key||x.txt)+'|'+x.ans;}):f();q.mode=mode;return q;
 }
 function header(){
  return '<div class="top"><button class="icon" id="home" aria-label="Home">🏠</button><span class="pill">⭐ '+total+'</span><button class="icon" id="mute" aria-label="Sound on or off">'+(muted?'🔇':'🔊')+'</button></div>';
@@ -1180,7 +1314,7 @@ function play(mode){
  function show(){
   q=mkQ(mode);padImg=null;
   var pads='',k;for(k=0;k<N;k++)pads+='<span class="pad '+(k<i?(res[k]?'done':'bad'):k===i?'now':'')+'"></span>';
-  var a='',fl=Math.max.apply(null,q.opts.map(function(o){return String(o).length;})),fs=q.list?'':q.sm?'1.8rem':fl>=8?'1.15rem':fl>=6?'1.4rem':fl>=5?'1.9rem':'';q.opts.forEach(function(o,oi){a+='<button class="ans" data-v="'+o+'"'+(fs?' style="font-size:'+fs+'"':'')+'>'+(q.lbl?'ABCD'.charAt(oi)+'. ':'')+o+'</button>';});
+  var a='',fl=Math.max.apply(null,q.opts.map(function(o){return String(o).length;})),fs=q.list?'':q.sm?'1.8rem':fl>=8?'1.15rem':fl>=6?'1.4rem':fl>=5?'1.9rem':'';q.opts.forEach(function(o,oi){a+='<button class="ans" data-v="'+o+'"'+(fs?' style="font-size:'+fs+'"':'')+'>'+(q.ohtml?q.ohtml[o]:(q.lbl?'ABCD'.charAt(oi)+'. ':'')+o)+'</button>';});
   app.innerHTML=header()+'<div style="text-align:center;font-weight:700;font-size:1.1rem">'+GN[GR]+' · Level '+LV+' of 5</div><div class="pads" aria-label="Question '+(i+1)+' of '+N+'">'+pads+'</div>'+
    '<div class="card q"><span class="frog" id="frog">🐸</span><div class="prompt">'+q.prompt+'</div>'+q.vis+'<div class="row" style="gap:8px"><button class="big alt" id="hear" style="font-size:1rem;padding:8px 14px">🔊 Hear it</button><button class="big alt" id="scr" style="font-size:1rem;padding:8px 14px">✏️ Scratch paper</button>'+(q.hint?'<button class="big alt" id="hint" style="font-size:1rem;padding:8px 14px">💡 Hint</button>':'')+'</div></div>'+
    '<div class="say" id="say" aria-live="polite">'+q.say+'</div><div class="answers'+(q.list?' l':'')+'" style="'+(q.two?'grid-template-columns:repeat(2,1fr)':q.list?'grid-template-columns:1fr':q.opts.length>=4?'grid-template-columns:repeat(2,1fr)':'')+'">'+a+'</div><div id="ls"></div>';
@@ -1252,5 +1386,6 @@ pkInit();
 if(hasGrade)menu();else pickGrade();
 })();
 </script>
-</body>
-</html>
+
+
+</body></html>
